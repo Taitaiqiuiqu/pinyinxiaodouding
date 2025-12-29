@@ -28,13 +28,35 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { callFunction } from '@/src/services/cloud'
-import { useGlobalStore } from '@/src/store/global'
-import AudioPlayer from '@/src/components/AudioPlayer/AudioPlayer.vue'
+import { callFunction } from '../../src/services/cloud'
+import { useGlobalStore } from '../../src/store/global'
+import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue'
 
 const store = useGlobalStore()
 const loading = ref(false)
 const audio = ref()
+
+function recoverLoginState() {
+  const isLoggedIn = uni.getStorageSync('isLoggedIn')
+  const savedOpenid = uni.getStorageSync('openid')
+  const savedUserInfo = uni.getStorageSync('userInfo')
+  
+  if (isLoggedIn && savedOpenid) {
+    store.setOpenId(savedOpenid)
+    if (savedUserInfo) {
+      store.setUserInfo(savedUserInfo)
+    }
+    return true
+  }
+  return false
+}
+
+function clearLoginState() {
+  uni.removeStorageSync('openid')
+  uni.removeStorageSync('userInfo')
+  uni.removeStorageSync('isLoggedIn')
+  uni.removeStorageSync('ageLevel')
+}
 
 // 处理微信授权登录
 const handleLogin = async () => {
@@ -66,10 +88,15 @@ const handleLogin = async () => {
 					code: loginRes.code,
 					userInfo: userInfo
 				})
-				
+
 				// 保存用户信息到全局状态
 				store.setUserInfo(userInfo)
 				store.setOpenId(cloudRes.result.openid)
+				
+				// 持久化保存关键数据
+				uni.setStorageSync('openid', cloudRes.result.openid)
+				uni.setStorageSync('userInfo', userInfo)
+				uni.setStorageSync('isLoggedIn', true)
 				
 				// 跳转到答题验证页面
 				await uni.navigateTo({ url: '/pages/quiz/index' })

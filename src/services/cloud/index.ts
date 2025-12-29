@@ -49,4 +49,47 @@ export function getDatabase(): any {
   return null
 }
 
+export async function updateAge(ageLevel: number): Promise<{ success: boolean; message: string }> {
+  try {
+    let openid = ''
+    const storeModule = await import('../../../store/global')
+    const useStoreFn = storeModule.useGlobalStore || (storeModule.default && storeModule.default.useGlobalStore)
+    if (typeof useStoreFn === 'function') {
+      const store = useStoreFn()
+      openid = store.openid || ''
+    }
+    if (!openid) {
+      openid = uni.getStorageSync('openid') || ''
+    }
+
+    if (!openid) {
+      return {
+        success: false,
+        message: '用户未登录'
+      }
+    }
+
+    const cloudRes = await callFunction('updateAge', { openid, ageLevel })
+    
+    const result = cloudRes.result || cloudRes
+
+    if (result.success) {
+      return {
+        success: true,
+        message: result.message
+      }
+    } else {
+      return {
+        success: false,
+        message: result.message || '更新失败'
+      }
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || '网络错误'
+    }
+  }
+}
+
 

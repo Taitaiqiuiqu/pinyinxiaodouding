@@ -73,7 +73,13 @@ export default {
       }
       this.currentTrack = track
       this.ctx.stop()
-      const audioPath = track.file.startsWith('/') ? track.file : `/static/audio/${track.file}`
+      let audioPath = track.file
+      if (audioPath.startsWith('/')) {
+        audioPath = audioPath.slice(1)
+      }
+      if (!audioPath.startsWith('static/')) {
+        audioPath = `static/audio/${audioPath}`
+      }
       console.log('AudioPlayer: setting src to', audioPath)
       this.ctx.src = audioPath
       this.ctx.loop = !!track.loop

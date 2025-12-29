@@ -30,7 +30,8 @@
 <script>
 import RoleGuide from '../../src/components/RoleGuide/RoleGuide.vue'
 import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue'
-import { useGlobalStore } from '@/store/global'
+import { useGlobalStore } from '../../src/store/global'
+import { updateAge } from '../../src/services/cloud'
 
 export default {
   components: { RoleGuide, AudioPlayer },
@@ -38,10 +39,10 @@ export default {
     return {
       guideText: '请选择适合孩子的年龄',
       options: [
-        { value: 3, label: '3-4 岁', icon: '🌸' },
-        { value: 4, label: '4-5 岁', icon: '⭐' },
-        { value: 5, label: '5-6 岁', icon: '🌱' },
-        { value: 6, label: '6-8 岁', icon: '🌈' }
+        { value: 1, label: '3-4 岁', icon: '🌸' },
+        { value: 2, label: '4-5 岁', icon: '⭐' },
+        { value: 3, label: '5-6 岁', icon: '🌱' },
+        { value: 4, label: '6-8 岁', icon: '🌈' }
       ]
     }
   },
@@ -53,10 +54,28 @@ export default {
     }).catch(() => {})
   },
   methods: {
-    selectAge(value) {
+    async selectAge(ageLevel) {
       const store = useGlobalStore()
-      store.setChildAge(value)
-      uni.showToast({ title: `已选择 ${value} 岁`, icon: 'success' })
+      store.setAgeLevel(ageLevel)
+      uni.setStorageSync('ageLevel', ageLevel)
+      
+      uni.showLoading({ title: '保存中...' })
+      
+      try {
+        const result = await updateAge(ageLevel)
+        
+        uni.hideLoading()
+        
+        if (result.success) {
+          uni.showToast({ title: '保存成功', icon: 'success' })
+        } else {
+          uni.showToast({ title: result.message, icon: 'none' })
+        }
+      } catch (error) {
+        uni.hideLoading()
+        uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+      }
+      
       // optional: navigate back or continue workflow
     }
   }
