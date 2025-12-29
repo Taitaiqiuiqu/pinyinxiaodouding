@@ -1,0 +1,17 @@
+{
+  "libVersion": "3.13.0",
+  "projectname": "pinyin",
+  "cloudfunction": {
+    "env": "cloud1-0g2q55rz3fb8f3b8"
+  },
+  "setting": {
+    "urlCheck": true,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": false,
+    "skylineRenderEnable": false,
+    "preloadBackgroundData": false,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "compileHotReLoad": true
+  }
+}
