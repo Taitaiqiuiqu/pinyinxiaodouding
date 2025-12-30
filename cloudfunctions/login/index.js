@@ -6,24 +6,7 @@ cloud.init({
 })
 const db = cloud.database()
 
-function convertAgeToLevel(age) {
-  if (age === null || age === undefined || age === '') {
-    return 1
-  }
-  const ageNum = Number(age)
-  if (isNaN(ageNum)) {
-    return 1
-  }
-  if (ageNum <= 4) {
-    return 1
-  } else if (ageNum <= 5) {
-    return 2
-  } else if (ageNum <= 6) {
-    return 3
-  } else {
-    return 4
-  }
-}
+
 
 // 云函数入口函数
 exports.main = async (event, context) => {
@@ -47,15 +30,11 @@ exports.main = async (event, context) => {
         updateTime: db.serverDate()
       }
       
+      // 检查 ageLevel 是否有效
       if (user.ageLevel === undefined || user.ageLevel === null) {
-        if (user.age !== undefined && user.age !== null) {
-          updateData.ageLevel = convertAgeToLevel(user.age)
-          updateData.age = db.command.unset()
-        } else {
-          updateData.ageLevel = 1
-        }
+        updateData.ageLevel = 1
         await db.collection('users').doc(user._id).update({ data: updateData })
-        user.ageLevel = updateData.ageLevel
+        user.ageLevel = 1
       } else if (typeof user.ageLevel !== 'number' || user.ageLevel < 1 || user.ageLevel > 4) {
         updateData.ageLevel = 1
         await db.collection('users').doc(user._id).update({ data: updateData })

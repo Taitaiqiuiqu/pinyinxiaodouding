@@ -1,7 +1,5 @@
 <template>
 	<view class="login-container">
-		<AudioPlayer ref="audio" />
-		
 		<!-- 装饰元素 -->
 		<view class="decoration decoration-1"></view>
 		<view class="decoration decoration-2"></view>
@@ -18,7 +16,7 @@
 				通过微信登录，开始你的拼音学习之旅
 			</view>
 			
-			<button class="wx-login-btn" @tap="handleLogin">
+			<button class="wx-login-btn" @getuserinfo="handleLogin" open-type="getUserInfo">
 				<text class="btn-icon">💖</text>
 				<text>微信授权登录</text>
 			</button>
@@ -27,14 +25,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { callFunction } from '../../src/services/cloud'
 import { useGlobalStore } from '../../src/store/global'
-import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue'
+import GlobalAudioManager from '../../src/services/GlobalAudioManager'
 
 const store = useGlobalStore()
 const loading = ref(false)
-const audio = ref()
+const audioManager = GlobalAudioManager.getInstance()
 
 function recoverLoginState() {
   const isLoggedIn = uni.getStorageSync('isLoggedIn')
@@ -59,26 +58,18 @@ function clearLoginState() {
 }
 
 // 处理微信授权登录
-const handleLogin = async () => {
+const handleLogin = async (e: any) => {
 	if (loading.value) return
 	
-	// 立即播放音频
-	audio.value && audio.value.play({
-		type: 'guide',
-		file: 'age-select/guide_age_survey_3-8_01.MP3'
-	}).catch(() => {})
+	// 点击登录按钮后开始循环播放音频
+	audioManager.startLoop('guide_age_survey_3-8_01', 'guide')
 	
 	loading.value = true
 	try {
-		// 使用 getUserProfile 获取用户信息（微信小程序推荐方式）
-		const profileRes = await uni.getUserProfile({
-			desc: '用于完善用户资料',
-			lang: 'zh_CN'
-		})
+		// 从事件对象中获取用户信息
+		const userInfo = e.detail.userInfo
 		
-		if (profileRes.userInfo) {
-			const userInfo = profileRes.userInfo
-			
+		if (userInfo) {
 			// 调用微信登录接口获取code
 			const loginRes = await uni.login()
 			
@@ -98,29 +89,51 @@ const handleLogin = async () => {
 				uni.setStorageSync('userInfo', userInfo)
 				uni.setStorageSync('isLoggedIn', true)
 				
+				// 注意：不停止音频循环播放，让音频持续到age-select页面
+				
 				// 跳转到答题验证页面
 				await uni.navigateTo({ url: '/pages/quiz/index' })
 			} else {
 				throw new Error('登录失败，无法获取code')
 			}
-		}
-	} catch (error: any) {
-		console.error('登录失败:', error)
-		if (error.errMsg && error.errMsg.includes('cancel')) {
+		} else {
+			// 用户拒绝授权
 			uni.showToast({
 				title: '已取消授权',
 				icon: 'none'
 			})
-		} else {
-			uni.showToast({
-				title: '登录失败，请重试',
-				icon: 'none'
-			})
 		}
+	} catch (error: any) {
+		console.error('登录失败:', error)
+		uni.showToast({
+			title: '登录失败，请重试',
+			icon: 'none'
+		})
 	} finally {
 		loading.value = false
 	}
 }
+
+// 组件卸载时清理资源
+onUnmounted(() => {
+  // 不停止音频，让音频持续到age-select页面
+})
+
+// 检查答题状态
+const checkQuizStatus = () => {
+  const quizCompleted = uni.getStorageSync('quizCompleted')
+  if (quizCompleted) {
+    // 如果答题已完成，停止音频播放
+    audioManager.stopLoop()
+    // 清除答题成功标志
+    uni.removeStorageSync('quizCompleted')
+  }
+}
+
+// 页面显示时检查答题状态
+onShow(() => {
+  checkQuizStatus()
+})
 </script>
 
 <style scoped>

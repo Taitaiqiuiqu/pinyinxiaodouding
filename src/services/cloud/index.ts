@@ -52,7 +52,7 @@ export function getDatabase(): any {
 export async function updateAge(ageLevel: number): Promise<{ success: boolean; message: string }> {
   try {
     let openid = ''
-    const storeModule = await import('../../../store/global')
+    const storeModule = await import('../../store/global')
     const useStoreFn = storeModule.useGlobalStore || (storeModule.default && storeModule.default.useGlobalStore)
     if (typeof useStoreFn === 'function') {
       const store = useStoreFn()

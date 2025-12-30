@@ -32,6 +32,7 @@ import RoleGuide from '../../src/components/RoleGuide/RoleGuide.vue'
 import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue'
 import { useGlobalStore } from '../../src/store/global'
 import { updateAge } from '../../src/services/cloud'
+import GlobalAudioManager from '../../src/services/GlobalAudioManager'
 
 export default {
   components: { RoleGuide, AudioPlayer },
@@ -47,14 +48,19 @@ export default {
     }
   },
   onShow() {
-    // play guide audio on enter
+    // play guide audio on enter with loop
     this.$refs.audio && this.$refs.audio.play({
       type: 'guide',
-      file: 'age-select/guide_age_survey_3-8_01.MP3'
+      file: 'age-select/guide_age_survey_3-8_01.MP3',
+      loop: true
     }).catch(() => {})
   },
   methods: {
     async selectAge(ageLevel) {
+      // 停止循环播放音频
+      const audioManager = GlobalAudioManager.getInstance()
+      audioManager.stopLoop()
+      
       const store = useGlobalStore()
       store.setAgeLevel(ageLevel)
       uni.setStorageSync('ageLevel', ageLevel)
@@ -68,6 +74,8 @@ export default {
         
         if (result.success) {
           uni.showToast({ title: '保存成功', icon: 'success' })
+          // 跳转到home页面
+          uni.navigateTo({ url: '/pages/home/index' })
         } else {
           uni.showToast({ title: result.message, icon: 'none' })
         }
@@ -75,8 +83,6 @@ export default {
         uni.hideLoading()
         uni.showToast({ title: '保存失败，请重试', icon: 'none' })
       }
-      
-      // optional: navigate back or continue workflow
     }
   }
 }

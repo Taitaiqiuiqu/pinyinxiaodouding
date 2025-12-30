@@ -3,7 +3,7 @@
   "setting": {
     "es6": true,
     "postcss": true,
-    "minified": true,
+    "minified": false,
     "uglifyFileName": false,
     "enhance": true,
     "packNpmRelationList": [],
@@ -14,7 +14,13 @@
     },
     "useCompilerPlugins": false,
     "minifyWXML": true,
-    "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
+    "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
+    "compileMode": "bundler",
+    "useIsolateContext": false,
+    "lazyloadPlaceholderEnable": false,
+    "disableUseStrict": false,
+    "useCompilerModule": true,
+    "userConfirmedUseCompilerModuleSwitch": true
   },
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},
@@ -24,5 +30,25 @@
   },
   "appid": "wxa7abf798524f25a4",
   "editorSetting": {},
-  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
+  "condition": {
+    "search": {
+      "list": []
+    },
+    "conversation": {
+      "list": []
+    },
+    "game": {
+      "list": []
+    },
+    "plugin": {
+      "list": []
+    },
+    "gamePlugin": {
+      "list": []
+    },
+    "miniprogram": {
+      "list": []
+    }
+  }
 }
