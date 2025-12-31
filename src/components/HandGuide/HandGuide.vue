@@ -4,28 +4,36 @@
   </view>
 </template>
 
-<script>
-export default {
-  name: 'HandGuide',
-  props: {
-    type: { type: String, default: 'click' }, // click / drag
-    show: { type: Boolean, default: true },
-    position: { type: Object, default: () => ({ top: '50%', left: '50%' }) }
-  },
-  computed: {
-    handImage() {
-      return `/static/images/hand/hand_${this.type}.png`
-    },
-    handStyle() {
-      return {
-        position: 'absolute',
-        top: this.position.top,
-        left: this.position.left,
-        transform: 'translate(-50%, -50%)'
-      }
-    }
-  }
+<script setup lang="ts">
+import { computed } from 'vue'
+
+interface Position {
+  top: string
+  left: string
 }
+
+const props = withDefaults(defineProps<{
+  type: string
+  show: boolean
+  position: Position
+}>(), {
+  type: 'click',
+  show: true,
+  position: () => ({ top: '50%', left: '50%' })
+})
+
+const handImage = computed(() => {
+  return `/static/images/hand/hand_${props.type}.png`
+})
+
+const handStyle = computed(() => {
+  return {
+    position: 'absolute',
+    top: props.position.top,
+    left: props.position.left,
+    transform: 'translate(-50%, -50%)'
+  }
+})
 </script>
 
 <style scoped lang="scss">

@@ -27,63 +27,62 @@
   </view>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import RoleGuide from '../../src/components/RoleGuide/RoleGuide.vue'
 import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue'
 import { useGlobalStore } from '../../src/store/global'
 import { updateAge } from '../../src/services/cloud'
 import GlobalAudioManager from '../../src/services/GlobalAudioManager'
 
-export default {
-  components: { RoleGuide, AudioPlayer },
-  data() {
-    return {
-      guideText: '请选择适合孩子的年龄',
-      options: [
-        { value: 1, label: '3-4 岁', icon: '🌸' },
-        { value: 2, label: '4-5 岁', icon: '⭐' },
-        { value: 3, label: '5-6 岁', icon: '🌱' },
-        { value: 4, label: '6-8 岁', icon: '🌈' }
-      ]
+const audio = ref<any>(null)
+
+// 响应式数据
+const guideText = ref('请选择适合孩子的年龄')
+const options = ref([
+  { value: 1, label: '3-4 岁', icon: '🌸' },
+  { value: 2, label: '4-5 岁', icon: '⭐' },
+  { value: 3, label: '5-6 岁', icon: '🌱' },
+  { value: 4, label: '6-8 岁', icon: '🌈' }
+])
+
+onShow(() => {
+  // play guide audio on enter with loop
+  audio.value && audio.value.play({
+    type: 'guide',
+    file: 'age-select/guide_age_survey_3-8_01.MP3',
+    loop: true
+  }).catch(() => {})
+})
+
+// 方法定义
+const selectAge = async (ageLevel: number) => {
+  // 停止循环播放音频
+  const audioManager = GlobalAudioManager.getInstance()
+  audioManager.stopLoop()
+  
+  const store = useGlobalStore()
+  store.setAgeLevel(ageLevel)
+  uni.setStorageSync('ageLevel', ageLevel)
+  
+  uni.showLoading({ title: '保存中...' })
+  
+  try {
+    const result = await updateAge(ageLevel)
+    
+    uni.hideLoading()
+    
+    if (result.success) {
+      uni.showToast({ title: '保存成功', icon: 'success' })
+      // 跳转到home页面
+      uni.navigateTo({ url: '/pages/home/index' })
+    } else {
+      uni.showToast({ title: result.message, icon: 'none' })
     }
-  },
-  onShow() {
-    // play guide audio on enter with loop
-    this.$refs.audio && this.$refs.audio.play({
-      type: 'guide',
-      file: 'age-select/guide_age_survey_3-8_01.MP3',
-      loop: true
-    }).catch(() => {})
-  },
-  methods: {
-    async selectAge(ageLevel) {
-      // 停止循环播放音频
-      const audioManager = GlobalAudioManager.getInstance()
-      audioManager.stopLoop()
-      
-      const store = useGlobalStore()
-      store.setAgeLevel(ageLevel)
-      uni.setStorageSync('ageLevel', ageLevel)
-      
-      uni.showLoading({ title: '保存中...' })
-      
-      try {
-        const result = await updateAge(ageLevel)
-        
-        uni.hideLoading()
-        
-        if (result.success) {
-          uni.showToast({ title: '保存成功', icon: 'success' })
-          // 跳转到home页面
-          uni.navigateTo({ url: '/pages/home/index' })
-        } else {
-          uni.showToast({ title: result.message, icon: 'none' })
-        }
-      } catch (error) {
-        uni.hideLoading()
-        uni.showToast({ title: '保存失败，请重试', icon: 'none' })
-      }
-    }
+  } catch (error) {
+    uni.hideLoading()
+    uni.showToast({ title: '保存失败，请重试', icon: 'none' })
   }
 }
 </script>
@@ -157,5 +156,3 @@ export default {
 .opt-6 { background: linear-gradient(135deg,#f0f4ff,#e0d4ff); border-color: rgba(167,139,250,0.4); }
 .opt-6 .opt-icon { content: '🌈'; }
 </style>
-
-

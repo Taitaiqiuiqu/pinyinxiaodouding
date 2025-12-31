@@ -7,35 +7,30 @@
   </view>
 </template>
 
-<script>
-export default {
-  name: 'RoleGuide',
-  props: {
-    roleType: {
-      type: String,
-      default: 'idle' // idle/point/speak/cheer/think
-    },
-    guideText: {
-      type: String,
-      default: ''
-    },
-    age: {
-      type: [Number, String],
-      default: null
-    }
-  },
-  emits: ['tap'],
-  computed: {
-    roleImage() {
-      // 约定素材路径在 /static/images/role/
-      return `/static/images/role/role_${this.roleType}.png`
-    }
-  },
-  methods: {
-    onTap() {
-      this.$emit('tap')
-    }
-  }
+<script setup lang="ts">
+import { computed } from 'vue'
+
+const props = withDefaults(defineProps<{
+  roleType: string
+  guideText: string
+  age: number | string | null
+}>(), {
+  roleType: 'idle',
+  guideText: '',
+  age: null
+})
+
+const emit = defineEmits<{
+  tap: []
+}>()
+
+const roleImage = computed(() => {
+  // 约定素材路径在 /static/images/role/
+  return `/static/images/role/role_${props.roleType}.png`
+})
+
+function onTap() {
+  emit('tap')
 }
 </script>
 

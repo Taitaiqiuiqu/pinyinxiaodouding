@@ -47,198 +47,202 @@
   </view>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { onShow, onHide } from '@dcloudio/uni-app'
 import RoleGuide from '../../src/components/RoleGuide/RoleGuide.vue'
 import HandGuide from '../../src/components/HandGuide/HandGuide.vue'
 import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue'
 
-export default {
-  components: { RoleGuide, HandGuide, AudioPlayer },
-  data() {
-    return {
-      guideText: '请先完成答题验证',
-      answer: '',
-      feedback: '',
-      btnDown: false,
-      attemptsLeft: 5,
-      nextRefillInMs: 0,
-      _attemptsTimerId: null,
-      showHandGuide: true,
-      showAnimation: false
-    }
-  },
-  onShow() {
-    // play guide audio on enter with loop
-    this.$refs.audio && this.$refs.audio.play({
-      type: 'guide',
-      file: 'age-select/guide_age_survey_3-8_01.MP3',
-      loop: true
-    }).catch(() => {})
-    this._loadAttemptsFromStorage()
-    this._startAttemptsTimer()
-  },
-  onHide() {
-    this._stopAttemptsTimer()
-  },
-  methods: {
-    formatMs(ms) {
-      const total = Math.max(0, Math.floor(ms / 1000))
-      const m = Math.floor(total / 60)
-      const s = total % 60
-      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
-    },
-    _storageKey() {
-      return 'ageSelectAttempts_v1'
-    },
+// 组件引用
+const audio = ref<any>(null)
 
-    _loadAttemptsFromStorage() {
-      try {
-        const raw = uni.getStorageSync(this._storageKey())
-        if (raw) {
-          const data = typeof raw === 'string' ? JSON.parse(raw) : raw
-          // { attemptsLeft, lastRefillTime }
-          if (typeof data.attemptsLeft === 'number') {
-            this.attemptsLeft = data.attemptsLeft
-          }
-          const lastRefill = data.lastRefillTime || null
-          // compute replenishments
-          if (this.attemptsLeft < 5 && lastRefill) {
-            const now = Date.now()
-            const elapsed = now - lastRefill
-            const interval = 10 * 60 * 1000
-            const adds = Math.floor(elapsed / interval)
-            if (adds > 0) {
-              this.attemptsLeft = Math.min(5, this.attemptsLeft + adds)
-              // advance lastRefillTime by adds * interval
-              const newLast = lastRefill + adds * interval
-              if (this.attemptsLeft >= 5) {
-                // clear refill tracking
-                uni.removeStorageSync(this._storageKey())
-              } else {
-                uni.setStorageSync(this._storageKey(), { attemptsLeft: this.attemptsLeft, lastRefillTime: newLast })
-              }
-            } else {
-              // keep stored data, compute nextRefillInMs
-              const next = lastRefill + interval - elapsed
-              this.nextRefillInMs = Math.max(0, next)
-            }
-          }
-        }
-      } catch (e) {
-        // ignore storage errors
+// 响应式数据
+const guideText = ref('请先完成答题验证')
+const answer = ref<number | ''>('')
+const feedback = ref('')
+const btnDown = ref(false)
+const attemptsLeft = ref(5)
+const nextRefillInMs = ref(0)
+const _attemptsTimerId = ref<any>(null)
+const showHandGuide = ref(true)
+const showAnimation = ref(false)
+
+// 生命周期钩子
+onShow(() => {
+  // play guide audio on enter with loop
+  audio.value && audio.value.play({
+    type: 'guide',
+    file: 'age-select/guide_age_survey_3-8_01.MP3',
+    loop: true
+  }).catch(() => {})
+  _loadAttemptsFromStorage()
+  _startAttemptsTimer()
+})
+
+onHide(() => {
+  _stopAttemptsTimer()
+})
+
+// 方法定义
+const formatMs = (ms: number) => {
+  const total = Math.max(0, Math.floor(ms / 1000))
+  const m = Math.floor(total / 60)
+  const s = total % 60
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+}
+
+const _storageKey = () => {
+  return 'ageSelectAttempts_v1'
+}
+
+const _loadAttemptsFromStorage = () => {
+  try {
+    const raw = uni.getStorageSync(_storageKey())
+    if (raw) {
+      const data = typeof raw === 'string' ? JSON.parse(raw) : raw
+      // { attemptsLeft, lastRefillTime }
+      if (typeof data.attemptsLeft === 'number') {
+        attemptsLeft.value = data.attemptsLeft
       }
-    },
-
-    _saveAttemptsToStorage() {
-      try {
-        if (this.attemptsLeft >= 5) {
-          uni.removeStorageSync(this._storageKey())
-          this.nextRefillInMs = 0
-        } else {
-          const now = Date.now()
-          // if no existing data, set lastRefillTime to now
-          const raw = uni.getStorageSync(this._storageKey())
-          let lastRefill = raw && raw.lastRefillTime ? raw.lastRefillTime : now
-          uni.setStorageSync(this._storageKey(), { attemptsLeft: this.attemptsLeft, lastRefillTime: lastRefill })
-        }
-      } catch (e) {}
-    },
-
-    _startAttemptsTimer() {
-      this._stopAttemptsTimer()
-      this._updateNextRefill()
-      this._attemptsTimerId = setInterval(() => {
-        this._updateNextRefill()
-      }, 1000)
-    },
-
-    _stopAttemptsTimer() {
-      if (this._attemptsTimerId) {
-        clearInterval(this._attemptsTimerId)
-        this._attemptsTimerId = null
-      }
-    },
-
-    _updateNextRefill() {
-      try {
-        const raw = uni.getStorageSync(this._storageKey())
-        if (!raw) {
-          this.nextRefillInMs = 0
-          return
-        }
-        const data = typeof raw === 'string' ? JSON.parse(raw) : raw
-        const lastRefill = data.lastRefillTime || Date.now()
-        const interval = 10 * 60 * 1000
+      const lastRefill = data.lastRefillTime || null
+      // compute replenishments
+      if (attemptsLeft.value < 5 && lastRefill) {
         const now = Date.now()
         const elapsed = now - lastRefill
-        if (elapsed >= interval) {
-          // perform replenishment(s)
-          const adds = Math.floor(elapsed / interval)
-          this.attemptsLeft = Math.min(5, (data.attemptsLeft || 0) + adds)
+        const interval = 10 * 60 * 1000
+        const adds = Math.floor(elapsed / interval)
+        if (adds > 0) {
+          attemptsLeft.value = Math.min(5, attemptsLeft.value + adds)
+          // advance lastRefillTime by adds * interval
           const newLast = lastRefill + adds * interval
-          if (this.attemptsLeft >= 5) {
-            uni.removeStorageSync(this._storageKey())
-            this.nextRefillInMs = 0
+          if (attemptsLeft.value >= 5) {
+            // clear refill tracking
+            uni.removeStorageSync(_storageKey())
           } else {
-            uni.setStorageSync(this._storageKey(), { attemptsLeft: this.attemptsLeft, lastRefillTime: newLast })
-            this.nextRefillInMs = Math.max(0, newLast + interval - now)
+            uni.setStorageSync(_storageKey(), { attemptsLeft: attemptsLeft.value, lastRefillTime: newLast })
           }
         } else {
-          this.nextRefillInMs = Math.max(0, lastRefill + interval - now)
+          // keep stored data, compute nextRefillInMs
+          const next = lastRefill + interval - elapsed
+          nextRefillInMs.value = Math.max(0, next)
         }
-      } catch (e) {
-        this.nextRefillInMs = 0
       }
-    },
-    hideHandGuide() {
-      this.showHandGuide = false
-    },
-    
-    submitAnswer() {
-      // if no attempts left, block
-      if (this.attemptsLeft <= 0) {
-        this.feedback = '已达到最大尝试次数，无法继续'
-        return
-      }
+    }
+  } catch (e) {
+    // ignore storage errors
+  }
+}
 
-      // correct answer is 8
-      if (Number(this.answer) === 8) {
-        this.feedback = '回答正确，正在跳转到年龄选择页面...'
-        // clear stored attempts when passed
-        try { uni.removeStorageSync(this._storageKey()) } catch(e){}
-        
-        // 设置答题成功标志
-        uni.setStorageSync('quizCompleted', true)
-        
-        // 注意：不停止音频播放，让音频持续到age-select页面
-        
-        // Navigate to age selection page
-        setTimeout(() => {
-          uni.navigateTo({
-            url: '/pages/age-select/index'
-          })
-        }, 1500)
+const _saveAttemptsToStorage = () => {
+  try {
+    if (attemptsLeft.value >= 5) {
+      uni.removeStorageSync(_storageKey())
+      nextRefillInMs.value = 0
+    } else {
+      const now = Date.now()
+      // if no existing data, set lastRefillTime to now
+      const raw = uni.getStorageSync(_storageKey())
+      let lastRefill = raw && raw.lastRefillTime ? raw.lastRefillTime : now
+      uni.setStorageSync(_storageKey(), { attemptsLeft: attemptsLeft.value, lastRefillTime: lastRefill })
+    }
+  } catch (e) {}
+}
+
+const _startAttemptsTimer = () => {
+  _stopAttemptsTimer()
+  _updateNextRefill()
+  _attemptsTimerId.value = setInterval(() => {
+    _updateNextRefill()
+  }, 1000)
+}
+
+const _stopAttemptsTimer = () => {
+  if (_attemptsTimerId.value) {
+    clearInterval(_attemptsTimerId.value)
+    _attemptsTimerId.value = null
+  }
+}
+
+const _updateNextRefill = () => {
+  try {
+    const raw = uni.getStorageSync(_storageKey())
+    if (!raw) {
+      nextRefillInMs.value = 0
+      return
+    }
+    const data = typeof raw === 'string' ? JSON.parse(raw) : raw
+    const lastRefill = data.lastRefillTime || Date.now()
+    const interval = 10 * 60 * 1000
+    const now = Date.now()
+    const elapsed = now - lastRefill
+    if (elapsed >= interval) {
+      // perform replenishment(s)
+      const adds = Math.floor(elapsed / interval)
+      attemptsLeft.value = Math.min(5, (data.attemptsLeft || 0) + adds)
+      const newLast = lastRefill + adds * interval
+      if (attemptsLeft.value >= 5) {
+        uni.removeStorageSync(_storageKey())
+        nextRefillInMs.value = 0
       } else {
-        this.attemptsLeft -= 1
-        if (this.attemptsLeft <= 0) {
-          this.feedback = '已达到最大尝试次数，无法继续'
-          // set lastRefillTime to now to start cooldown tracking
-          try { uni.setStorageSync(this._storageKey(), { attemptsLeft: this.attemptsLeft, lastRefillTime: Date.now() }) } catch(e){}
-          this._updateNextRefill()
-        } else {
-          // ensure storage has lastRefillTime (start cooldown)
-          try {
-            const raw = uni.getStorageSync(this._storageKey())
-            if (!raw || !raw.lastRefillTime) {
-              uni.setStorageSync(this._storageKey(), { attemptsLeft: this.attemptsLeft, lastRefillTime: Date.now() })
-            } else {
-              uni.setStorageSync(this._storageKey(), { attemptsLeft: this.attemptsLeft, lastRefillTime: raw.lastRefillTime })
-            }
-          } catch(e){}
-          this.feedback = `答案不正确，请再试一次（剩余 ${this.attemptsLeft} 次）`
-          this._updateNextRefill()
-        }
+        uni.setStorageSync(_storageKey(), { attemptsLeft: attemptsLeft.value, lastRefillTime: newLast })
+        nextRefillInMs.value = Math.max(0, newLast + interval - now)
       }
+    } else {
+      nextRefillInMs.value = Math.max(0, lastRefill + interval - now)
+    }
+  } catch (e) {
+    nextRefillInMs.value = 0
+  }
+}
+
+const hideHandGuide = () => {
+  showHandGuide.value = false
+}
+
+const submitAnswer = () => {
+  // if no attempts left, block
+  if (attemptsLeft.value <= 0) {
+    feedback.value = '已达到最大尝试次数，无法继续'
+    return
+  }
+
+  // correct answer is 8
+  if (Number(answer.value) === 8) {
+    feedback.value = '回答正确，正在跳转到年龄选择页面...'
+    // clear stored attempts when passed
+    try { uni.removeStorageSync(_storageKey()) } catch(e){}
+    
+    // 设置答题成功标志
+    uni.setStorageSync('quizCompleted', true)
+    
+    // 注意：不停止音频播放，让音频持续到age-select页面
+    
+    // Navigate to age selection page
+    setTimeout(() => {
+      uni.navigateTo({
+        url: '/pages/age-select/index'
+      })
+    }, 1500)
+  } else {
+    attemptsLeft.value -= 1
+    if (attemptsLeft.value <= 0) {
+      feedback.value = '已达到最大尝试次数，无法继续'
+      // set lastRefillTime to now to start cooldown tracking
+      try { uni.setStorageSync(_storageKey(), { attemptsLeft: attemptsLeft.value, lastRefillTime: Date.now() }) } catch(e){}
+      _updateNextRefill()
+    } else {
+      // ensure storage has lastRefillTime (start cooldown)
+      try {
+        const raw = uni.getStorageSync(_storageKey())
+        if (!raw || !raw.lastRefillTime) {
+          uni.setStorageSync(_storageKey(), { attemptsLeft: attemptsLeft.value, lastRefillTime: Date.now() })
+        } else {
+          uni.setStorageSync(_storageKey(), { attemptsLeft: attemptsLeft.value, lastRefillTime: raw.lastRefillTime })
+        }
+      } catch(e){}
+      feedback.value = `答案不正确，请再试一次（剩余 ${attemptsLeft.value} 次）`
+      _updateNextRefill()
     }
   }
 }

@@ -17,22 +17,8 @@ const play = (params: { type: string; file: string; loop?: boolean; onComplete?:
   if (loop) {
     audioManager.startLoop(file, type)
   } else {
-    audioManager.playOnce(file, type)
-    
-    // 如果提供了完成回调，根据音频类型设置不同的超时时间
-    if (onComplete) {
-      // 根据音频类型设置合理的超时时间
-      let timeout = 5000 // 默认5秒
-      if (type === 'common') {
-        timeout = 2000 // 点击音效等短音频
-      } else if (type === 'guide') {
-        timeout = 15000 // 引导音频
-      } else if (type === 'phonics') {
-        timeout = 10000 // 拼音音频
-      }
-      
-      setTimeout(onComplete, timeout)
-    }
+    // 直接将onComplete回调传递给playOnce方法，由GlobalAudioManager在音频真正结束时调用
+    audioManager.playOnce(file, type, onComplete)
   }
 }
 

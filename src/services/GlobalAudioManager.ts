@@ -7,6 +7,8 @@ class GlobalAudioManager {
   private isPlaying: boolean = false
   private currentAudioFile: string = ''
   private audioType: string = ''
+  private onCompleteCallback: (() => void) | null = null
+  private audioCache: Map<string, string> = new Map() // 音频URL缓存
 
   private constructor() {
     this.init()
@@ -86,11 +88,26 @@ class GlobalAudioManager {
     
     console.log('[GlobalAudioManager] 开始播放音频:', this.currentAudioFile)
     
-    const audioURL = await this.loadAudioFromCloud(this.currentAudioFile, this.audioType)
+    // 生成缓存键
+    const cacheKey = `${this.audioType}_${this.currentAudioFile}`
     
+    // 检查缓存
+    let audioURL = this.audioCache.get(cacheKey)
+    
+    // 如果缓存中没有，从云端加载
     if (!audioURL) {
-      console.error('[GlobalAudioManager] 云端音频加载失败，无法播放音频:', this.currentAudioFile)
-      return
+      audioURL = await this.loadAudioFromCloud(this.currentAudioFile, this.audioType)
+      
+      if (!audioURL) {
+        console.error('[GlobalAudioManager] 云端音频加载失败，无法播放音频:', this.currentAudioFile)
+        return
+      }
+      
+      // 缓存音频URL
+      this.audioCache.set(cacheKey, audioURL)
+      console.log('[GlobalAudioManager] 音频URL已缓存:', cacheKey)
+    } else {
+      console.log('[GlobalAudioManager] 从缓存获取音频URL:', cacheKey)
     }
     
     console.log('[GlobalAudioManager] 设置音频源 src:', audioURL)
@@ -129,12 +146,13 @@ class GlobalAudioManager {
     }
   }
 
-  playOnce(audioFile: string, audioType: string = 'guide') {
+  playOnce(audioFile: string, audioType: string = 'guide', onComplete?: () => void) {
     console.log('[GlobalAudioManager] playOnce called with:', audioFile, audioType)
     this.currentAudioFile = audioFile
     this.audioType = audioType
     // 单次播放不需要设置isPlaying为true（因为isPlaying用于控制循环播放）
     this.isPlaying = false
+    this.onCompleteCallback = onComplete || null
     this.playAudio()
   }
 
@@ -151,6 +169,12 @@ class GlobalAudioManager {
           this.playAudio()
         }
       }, 3000) // 固定等待3秒
+    } else if (this.onCompleteCallback) {
+      // 单次播放完成，调用回调函数
+      console.log('[GlobalAudioManager] 单次播放完成，调用onComplete回调')
+      const callback = this.onCompleteCallback
+      this.onCompleteCallback = null // 清空回调，避免重复调用
+      callback()
     }
   }
 

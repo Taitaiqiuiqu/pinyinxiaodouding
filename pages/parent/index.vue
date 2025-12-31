@@ -91,75 +91,68 @@
   </view>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import RoleGuide from '../../src/components/RoleGuide/RoleGuide.vue'
 import { useGlobalStore } from '../../src/store/global'
 
-export default {
-  components: { RoleGuide },
-  data() {
-      return {
-        guideText: '管理孩子的学习设置',
-        maxUsageTime: 30,
-        usedTime: 0,
-        isLocked: false
-      }
-    },
-  computed: {
-    progressPercentage() {
-      if (this.maxUsageTime === 0) return 0
-      return Math.min(100, (this.usedTime / this.maxUsageTime) * 100)
-    }
-  },
-  onShow() {
-    this.loadUserSettings()
-  },
-  methods: {
-    formatTime(minutes) {
-      const hours = Math.floor(minutes / 60)
-      const mins = minutes % 60
-      if (hours > 0) {
-        return `${hours}小时${mins}分钟`
-      }
-      return `${mins}分钟`
-    },
-    
-    loadUserSettings() {
-      const store = useGlobalStore()
-      this.maxUsageTime = store.maxUsageTime || 30
-      this.usedTime = store.usedTime || 0
-      this.isLocked = this.usedTime >= this.maxUsageTime
-    },
-    
-    setMaxUsageTime(minutes) {
-      const store = useGlobalStore()
-      store.setMaxUsageTime(minutes)
-      this.maxUsageTime = minutes
-      this.isLocked = this.usedTime >= this.maxUsageTime
-      
-      uni.showToast({
-        title: '设置已保存',
-        icon: 'success'
-      })
-    },
-    
-    resetUsageTime() {
-      const store = useGlobalStore()
-      store.setUsedTime(0)
-      this.usedTime = 0
-      this.isLocked = false
-      
-      uni.showToast({
-        title: '今日时长已重置',
-        icon: 'success'
-      })
-    },
-    
-    goBack() {
-      uni.navigateBack()
-    }
+const store = useGlobalStore()
+
+const guideText = ref('管理孩子的学习设置')
+const maxUsageTime = ref(30)
+const usedTime = ref(0)
+const isLocked = ref(false)
+
+const progressPercentage = computed(() => {
+  if (maxUsageTime.value === 0) return 0
+  return Math.min(100, (usedTime.value / maxUsageTime.value) * 100)
+})
+
+function formatTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours > 0) {
+    return `${hours}小时${mins}分钟`
   }
+  return `${mins}分钟`
 }
+
+function loadUserSettings() {
+  maxUsageTime.value = store.maxUsageTime || 30
+  usedTime.value = store.usedTime || 0
+  isLocked.value = usedTime.value >= maxUsageTime.value
+}
+
+function setMaxUsageTime(minutes: number) {
+  store.setMaxUsageTime(minutes)
+  maxUsageTime.value = minutes
+  isLocked.value = usedTime.value >= maxUsageTime.value
+  
+  uni.showToast({
+    title: '设置已保存',
+    icon: 'success'
+  })
+}
+
+function resetUsageTime() {
+  store.setUsedTime(0)
+  usedTime.value = 0
+  isLocked.value = false
+  
+  uni.showToast({
+    title: '今日时长已重置',
+    icon: 'success'
+  })
+}
+
+function goBack() {
+  uni.navigateBack()
+}
+
+onShow(() => {
+  loadUserSettings()
+})
 </script>
 
 <style scoped>

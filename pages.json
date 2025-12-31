@@ -35,6 +35,36 @@
 			"style": {
 				"navigationBarTitleText": "家长设置"
 			}
+		},
+		{
+			"path": "pages/course/phonics/index",
+			"style": {
+				"navigationBarTitleText": "拼音课程"
+			}
+		},
+		{
+			"path": "pages/course/lessons/index",
+			"style": {
+				"navigationBarTitleText": "课程列表"
+			}
+		},
+		{
+			"path": "pages/course/detail/index",
+			"style": {
+				"navigationBarTitleText": "课程详情"
+			}
+		},
+		{
+			"path": "pages/exercise/index",
+			"style": {
+				"navigationBarTitleText": "练习中心"
+			}
+		},
+		{
+			"path": "pages/learning/index",
+			"style": {
+				"navigationBarTitleText": "学习中心"
+			}
 		}
 	],
 	"globalStyle": {

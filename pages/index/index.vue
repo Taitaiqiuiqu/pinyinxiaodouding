@@ -7,20 +7,15 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				title: 'Hello'
-			}
-		},
-		onLoad() {
+<script setup lang="ts">
+import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 
-		},
-		methods: {
+const title = ref('Hello')
 
-		}
-	}
+onLoad(() => {
+
+})
 </script>
 
 <style>
