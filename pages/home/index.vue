@@ -9,11 +9,11 @@
     <view class="main-content">
       <!-- 功能模块卡片 -->
       <view class="module-grid">
-        <!-- 课程学习卡片 -->
-        <view class="module-card card-primary" @tap="showComingSoon('课程学习')">
+        <!-- 拼音启蒙卡片 -->
+        <view class="module-card card-primary" @tap="showComingSoon('拼音启蒙')">
           <view class="card-content">
             <Icon name="course" size="100rpx" color="#FFFFFF" />
-            <text class="card-title">课程学习</text>
+            <text class="card-title">拼音启蒙</text>
             <text class="card-desc">拼音跟读、拼音儿歌</text>
           </view>
         </view>
