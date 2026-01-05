@@ -41,7 +41,8 @@
     "dev:mp-lark": "uni-launch mp-lark",
     "dev:mp-jd": "uni-launch mp-jd",
     "dev:quickapp-huawei": "uni-launch quickapp-webview-huawei",
-    "dev:quickapp-union": "uni-launch quickapp-webview-union"
+    "dev:quickapp-union": "uni-launch quickapp-webview-union",
+    "check-types": "npx tsc --noEmit"
   },
   "dependencies": {
     "pinia": "^2.3.1"

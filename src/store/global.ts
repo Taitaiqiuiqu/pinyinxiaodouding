@@ -12,9 +12,19 @@ const STORAGE_KEYS = {
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
   try {
+    // 小程序中，uni.getStorageSync 在 key 不存在时返回 ""，而不是 null 或 undefined
     const raw = uni.getStorageSync(key)
     if (raw !== '' && raw !== null && raw !== undefined) {
-      return typeof raw === 'string' ? JSON.parse(raw) : raw
+      // 在小程序中，JSON.parse 处理非字符串可能会报错，需要先检查类型
+      if (typeof raw === 'string') {
+        try {
+          return JSON.parse(raw) as T
+        } catch (parseError) {
+          // 如果解析失败，可能是直接存储的字符串值
+          return raw as unknown as T
+        }
+      }
+      return raw as T
     }
   } catch (e) {
     console.warn(`Failed to load ${key} from storage:`, e)
@@ -38,6 +48,10 @@ function loadBoolean(key: string, defaultValue: boolean = false): boolean {
   try {
     const raw = uni.getStorageSync(key)
     if (raw !== '' && raw !== null && raw !== undefined) {
+      // 小程序中，存储的布尔值可能是字符串 "true" 或 "false"
+      if (typeof raw === 'string') {
+        return raw.toLowerCase() === 'true'
+      }
       return Boolean(raw)
     }
   } catch (e) {

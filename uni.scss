@@ -12,171 +12,497 @@
  * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
  */
 
-/* 颜色变量 */
+/* 颜色变量 - 儿童友好的明亮色彩系统 */
 
-/* 行为相关颜色 */
-$uni-color-primary: #007aff;
-$uni-color-success: #4cd964;
-$uni-color-warning: #f0ad4e;
-$uni-color-error: #dd524d;
+/* 主色调系统 - 只使用红、黄、蓝三种颜色 */
+$uni-color-primary: #FF476F; // 明亮红色，主色调
+$uni-color-primary-light: #FFEBF0; // 浅红背景色
+$uni-color-primary-dark: #E53E3E; // 深红强调色
 
-/* 文字基本颜色 */
-$uni-text-color:#333;//基本色
-$uni-text-color-inverse:#fff;//反色
-$uni-text-color-grey:#999;//辅助灰色，如加载更多的提示信息
-$uni-text-color-placeholder: #808080;
-$uni-text-color-disable:#c0c0c0;
+/* 辅助色系统 - 只使用红、黄、蓝三种颜色 */
+$uni-color-success: #3B82F6; // 明亮蓝色，用于成功状态
+$uni-color-warning: #FBBF24; // 明亮黄色，用于提示
+$uni-color-error: #EF4444; // 明亮红色，用于错误
 
-/* 背景颜色 */
-$uni-bg-color:#ffffff;
-$uni-bg-color-grey:#f8f8f8;
-$uni-bg-color-hover:#f1f1f1;//点击状态颜色
-$uni-bg-color-mask:rgba(0, 0, 0, 0.4);//遮罩颜色
+/* 功能模块主题色 - 只使用红、黄、蓝三种颜色 */
+$brand-learning: #FF476F; // 红色 - 学习模块
+$brand-game: #FBBF24; // 黄色 - 游戏模块
+$brand-achievement: #3B82F6; // 蓝色 - 成就模块
+$brand-creative: #FF476F; // 红色 - 创意模块
+$brand-explore: #3B82F6; // 蓝色 - 探索模块
+$brand-practice: #FBBF24; // 黄色 - 练习模块
 
-/* 边框颜色 */
-$uni-border-color:#c8c7cc;
+/* 文字颜色系统 - 清晰易读 */
+$uni-text-color: #264653; // 深青灰，主文本色，清晰柔和
+$uni-text-color-inverse: #FFFFFF; // 反色
+$uni-text-color-grey: #6C757D; // 中灰色，辅助文本
+$uni-text-color-placeholder: #ADB5BD; // 浅灰色，占位符
+$uni-text-color-disable: #CED4DA; // 极浅灰，禁用状态
+$text-primary: #264653; // 统一主文本色
+$text-secondary: #6C757D; // 统一次要文本色
+$text-light: #ADB5BD; // 统一浅色文本
 
-/* 尺寸变量 */
+/* 背景颜色系统 - 色块拼接式设计 */
+$uni-bg-color: #FAFAFA; // 极浅米白色，主背景色，干净简洁
+$uni-bg-color-grey: #F5F7FA; // 超浅灰，辅助背景
+$uni-bg-color-hover: #F0F4F8; // 点击状态背景
+$uni-bg-color-mask: rgba(0, 0, 0, 0.4); // 遮罩颜色
+$brand-soft: #FFFFFF; // 纯白色，卡片背景色
+$surface-bg: #FFFFFF; // 卡片背景
+$surface-card: #FFFFFF; // 纯白色，简洁干净
 
-/* 文字尺寸 */
-$uni-font-size-sm:12px;
-$uni-font-size-base:14px;
-$uni-font-size-lg:16px;
+/* 功能区块色块颜色 - 只使用红、黄、蓝三种颜色 */
+$block-color-1: #FF476F; // 明亮红色，用于主要功能区块
+$block-color-2: #FF476F; // 明亮红色，用于学习模块
+$block-color-3: #FBBF24; // 明亮黄色，用于游戏模块
+$block-color-4: #3B82F6; // 明亮蓝色，用于练习模块
+$block-color-5: #FF476F; // 明亮红色，用于创意模块
+$block-color-6: #3B82F6; // 明亮蓝色，用于成就模块
 
-/* 图片尺寸 */
-$uni-img-size-sm:20px;
-$uni-img-size-base:26px;
-$uni-img-size-lg:40px;
+/* 边框颜色 - 细腻柔和 */
+$uni-border-color: #E0E0E0; // 极浅灰色边框
+$uni-border-color-light: #F0F0F0; // 更浅的边框色
 
-/* Border Radius */
-$uni-border-radius-sm: 2px;
-$uni-border-radius-base: 3px;
-$uni-border-radius-lg: 6px;
-$uni-border-radius-circle: 50%;
+/* 阴影系统 - 柔和模糊的阴影，避免硬朗线条 */
+$shadow-soft: 0 6rpx 24rpx rgba(0, 0, 0, 0.04); // 极淡模糊阴影
+$shadow-card: 0 12rpx 40rpx rgba(0, 0, 0, 0.06); // 卡片基础阴影，更柔和
+$shadow-card-hover: 0 16rpx 56rpx rgba(0, 0, 0, 0.08); // 卡片悬停阴影，更模糊
+$shadow-card-active: 0 8rpx 32rpx rgba(0, 0, 0, 0.07); // 卡片激活阴影
+$shadow-btn: 0 8rpx 32rpx rgba(255, 71, 111, 0.2); // 按钮阴影，使用红色主色调
+$shadow-btn-hover: 0 12rpx 48rpx rgba(255, 71, 111, 0.25); // 按钮悬停阴影，更模糊
+$shadow-btn-active: 0 6rpx 24rpx rgba(255, 71, 111, 0.2); // 按钮激活阴影
+
+/* 尺寸变量 - 儿童友好的布局系统 */
+
+/* 文字尺寸 - 清晰的层级体系，更大更易读 */
+$uni-font-size-xs: 26rpx; // 辅助文字，稍大更易读
+$uni-font-size-sm: 30rpx; // 次要文字
+$uni-font-size-base: 34rpx; // 正文文字，适合儿童阅读
+$uni-font-size-lg: 40rpx; // 标题文字
+$uni-font-size-xl: 48rpx; // 大标题
+$uni-font-size-xxl: 64rpx; // 主标题，醒目但不夸张
+
+/* 图片尺寸 - 统一规范，更大更醒目 */
+$uni-img-size-sm: 32px;
+$uni-img-size-base: 40px;
+$uni-img-size-lg: 56px;
+
+/* Border Radius - 超大圆角，营造柔软安全的感觉 */
+$uni-border-radius-sm: 24rpx; // 小圆角
+$uni-border-radius-base: 32rpx; // 基础圆角
+$uni-border-radius-lg: 40rpx; // 大圆角
+$uni-border-radius-xl: 48rpx; // 超大圆角
+$uni-border-radius-xxl: 64rpx; // 极大大圆角，用于卡片
+$uni-border-radius-circle: 50%; // 圆形
+
+/* 间距规范 - 充足的间距，避免拥挤 */
+$space-xxs: 12rpx; // 极小区距
+$space-xs: 20rpx; // 小间距
+$space-sm: 28rpx; // 基础间距
+$space-md: 36rpx; // 中等间距
+$space-lg: 48rpx; // 大间距
+$space-xl: 60rpx; // 超大间距
+$space-xxl: 80rpx; // 极大间距
 
 /* 水平间距 */
-$uni-spacing-row-sm: 5px;
-$uni-spacing-row-base: 10px;
-$uni-spacing-row-lg: 15px;
+$uni-spacing-row-sm: 20rpx;
+$uni-spacing-row-base: 28rpx;
+$uni-spacing-row-lg: 36rpx;
 
 /* 垂直间距 */
-$uni-spacing-col-sm: 4px;
-$uni-spacing-col-base: 8px;
-$uni-spacing-col-lg: 12px;
+$uni-spacing-col-sm: 20rpx;
+$uni-spacing-col-base: 28rpx;
+$uni-spacing-col-lg: 36rpx;
 
-/* 透明度 */
-$uni-opacity-disabled: 0.3; // 组件禁用态的透明度
+/* 文字间距 - 舒适易读 */
+$letter-spacing-sm: 0.5rpx;
+$letter-spacing-md: 1rpx;
+$letter-spacing-lg: 2rpx;
+$letter-spacing-wide: 3rpx;
+
+/* 行高优化 - 舒适阅读，适合儿童 */
+$line-height-tight: 1.5; // 紧凑行高
+$line-height-normal: 1.7; // 标准行高，更舒适
+$line-height-relaxed: 1.9; // 宽松行高
+$line-height-loose: 2.1; // 极宽松行高
+
+/* 透明度 - 细腻过渡 */
+$uni-opacity-disabled: 0.5; // 禁用态透明度
+$opacity-light: 0.8;
+$opacity-lighter: 0.6;
+$opacity-lightest: 0.4;
+
+/* 模块主题色 - 纯色简洁 */
+$module-primary: $uni-color-primary; // 主模块色
+$module-learning: $brand-learning; // 学习模块色
+$module-game: $brand-game; // 游戏模块色
+$module-achievement: $brand-achievement; // 成就模块色
+$module-creative: $brand-creative; // 创意模块色
+$module-practice: $brand-practice; // 练习模块色
 
 /* 文章场景相关 */
 $uni-color-title: #2C405A; // 文章标题颜色
-$uni-font-size-title:20px;
+$uni-font-size-title: 48rpx;
 $uni-color-subtitle: #555555; // 二级标题颜色
-$uni-font-size-subtitle:26px;
+$uni-font-size-subtitle: 36rpx;
 $uni-color-paragraph: #3F536E; // 文章段落颜色
-$uni-font-size-paragraph:15px;
+$uni-font-size-paragraph: 32rpx;
 
-/* --- Child-friendly design tokens (优化) --- */
-$brand-primary: #ff6baa;   /* 主色，增强饱和度的粉色，温暖可爱 */
-$brand-secondary: #ff8c3b; /* 辅助主色，增强饱和度的橙色活力 */
-$brand-accent1: #ffd93d;   /* 强调色1，明亮黄色 */
-$brand-accent2: #6bcf7f;   /* 强调色2，清新绿色 */
-$brand-accent3: #a78bfa;   /* 强调色3，梦幻紫色 */
-$brand-accent4: #4ecdc4;   /* 强调色4，青色清新 */
-$brand-accent5: #7ed6df;   /* 新增强调色5，天蓝色 */
-$brand-accent6: #a29bfe;   /* 新增强调色6，深紫色 */
-$brand-soft: #fff9f5;      /* 柔和背景，温暖米白 */
-$surface-bg: #ffffff;
-$surface-card: #ffffff;
-$shadow-soft: 0 8rpx 24rpx rgba(255,107,170,0.15);
-$shadow-card: 0 12rpx 32rpx rgba(255,107,170,0.2);
-$shadow-btn: 0 8rpx 24rpx rgba(255,140,59,0.3);
-$radius-xl: 36rpx;
-$radius-lg: 28rpx;
-$radius-md: 20rpx;
-$radius-sm: 12rpx;
-$space-xl: 32rpx;
-$space-lg: 28rpx;
-$space-md: 20rpx;
-$space-sm: 12rpx;
+/* 年龄选项颜色变体 - 只使用红、黄、蓝三种颜色 */
+$age-3-4: #FFE4E6; // 浅红色系
+$age-4-5: #FFFBEB; // 浅黄色系
+$age-5-6: #DBEAFE; // 浅蓝色系
+$age-6-8: #EFF6FF; // 浅蓝色系
 
-/* 渐变背景 */
-$gradient-warm: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-$gradient-fresh: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-$gradient-pink: linear-gradient(135deg, #ff6baa 0%, #ff8c3b 100%);
-$gradient-blue: linear-gradient(135deg, #7ed6df 0%, #a29bfe 100%);
-$gradient-green: linear-gradient(135deg, #6bcf7f 0%, #4ecdc4 100%);
-$gradient-purple: linear-gradient(135deg, #a78bfa 0%, #a29bfe 100%);
+/* Global utility classes for consistent look - 优化后 */
 
-/* 文本颜色 */
-$text-primary: #2d3436;
-$text-secondary: #636e72;
-$text-error: #ff6b6b;
-
-/* Global utility classes for consistent look */
+/* 主按钮样式 - 简约柔和 */
 .btn-primary {
-  background: $gradient-pink;
+  background: $uni-color-primary;
   color: $uni-text-color-inverse;
-  padding: 16rpx 32rpx;
-  border-radius: $radius-xl;
-  font-weight: 700;
+  padding: 20rpx 48rpx;
+  border-radius: $uni-border-radius-xl;
+  font-size: $uni-font-size-base;
+  font-weight: 600;
   box-shadow: $shadow-btn;
   border: none;
-  height: 52rpx;
+  height: 88rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: $letter-spacing-md;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
 }
 
 .btn-primary:active {
-  transform: scale(0.95);
-  box-shadow: 0 4rpx 12rpx rgba(255,154,86,0.2);
+  transform: scale(0.96);
+  box-shadow: $shadow-btn-active;
 }
 
+.btn-primary:active::before {
+  width: 300rpx;
+  height: 300rpx;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2rpx);
+  box-shadow: $shadow-btn-hover;
+}
+
+/* 辅助按钮样式 - 简约清爽 */
 .btn-secondary {
-  background: $surface-bg;
-  color: $brand-primary;
-  padding: 16rpx 32rpx;
-  border-radius: $radius-xl;
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.95);
+  color: $uni-color-primary;
+  padding: 18rpx 44rpx;
+  border-radius: $uni-border-radius-xl;
+  font-size: $uni-font-size-sm;
+  font-weight: 500;
   box-shadow: $shadow-soft;
-  border: 2rpx solid $brand-primary;
-  height: 52rpx;
+  border: 2rpx solid $uni-color-primary-light;
+  height: 80rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition: all 0.25s ease;
+  letter-spacing: $letter-spacing-sm;
 }
 
 .btn-secondary:active {
-  transform: scale(0.95);
-  box-shadow: 0 4rpx 12rpx rgba(255,126,179,0.1);
+  transform: scale(0.96);
+  box-shadow: 0 4rpx 16rpx rgba(255, 126, 179, 0.15);
 }
 
+.btn-secondary:hover {
+  transform: translateY(-2rpx);
+  box-shadow: 0 8rpx 24rpx rgba(255, 126, 179, 0.15);
+  border-color: $uni-color-primary;
+}
+
+/* 卡片样式 - 色块拼接式设计，漂浮的彩色积木 */
 .card {
   background: $surface-card;
-  border-radius: $radius-md;
+  border-radius: $uni-border-radius-xxl;
   box-shadow: $shadow-card;
-  padding: $space-lg;
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  padding: 32rpx;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  // 移除顶部装饰条，保持色块简洁
 }
 
 .card:hover {
-  transform: translateY(-4rpx);
-  box-shadow: 0 16rpx 40rpx rgba(255,126,179,0.18);
+  transform: translateY(-4rpx) scale(1.02);
+  box-shadow: $shadow-card-hover;
 }
 
-.rounded-xl { border-radius: $radius-xl; }
-.rounded-lg { border-radius: $radius-lg; }
-.rounded-md { border-radius: $radius-md; }
-.rounded-sm { border-radius: $radius-sm; }
-.soft-bg { background: $brand-soft; }
-.muted { color: $text-secondary; }
+.card:active {
+  transform: translateY(-2rpx) scale(0.99);
+  box-shadow: $shadow-card-active;
+}
 
-/* simple animation for role character */
+.card.locked {
+  opacity: 0.6;
+  background: $uni-bg-color-grey;
+  border: none;
+  cursor: not-allowed;
+}
+
+.card.locked:hover {
+  transform: none;
+  box-shadow: $shadow-card;
+}
+
+.card.locked:active {
+  transform: none;
+  box-shadow: $shadow-card;
+}
+
+/* 功能区块色块样式 - 不同颜色的纯色块 */
+.block {
+  border-radius: $uni-border-radius-xxl;
+  box-shadow: $shadow-card;
+  padding: 32rpx;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  border: none;
+}
+
+.block:hover {
+  transform: translateY(-4rpx) scale(1.02);
+  box-shadow: $shadow-card-hover;
+}
+
+.block:active {
+  transform: translateY(-2rpx) scale(0.99);
+  box-shadow: $shadow-card-active;
+}
+
+/* 色块颜色变体 */
+.block-pink {
+  background: $block-color-1;
+  color: $uni-text-color-inverse;
+}
+
+.block-green {
+  background: $block-color-2;
+  color: $uni-text-color-inverse;
+}
+
+.block-yellow {
+  background: $block-color-3;
+  color: $text-primary;
+}
+
+.block-blue {
+  background: $block-color-4;
+  color: $uni-text-color-inverse;
+}
+
+.block-purple {
+  background: $block-color-5;
+  color: $uni-text-color-inverse;
+}
+
+.block-orange {
+  background: $block-color-6;
+  color: $uni-text-color-inverse;
+}
+
+/* 卡片内部元素颜色自适应 */
+.block-pink .card-title,
+.block-green .card-title,
+.block-blue .card-title,
+.block-purple .card-title,
+.block-orange .card-title {
+  color: $uni-text-color-inverse;
+}
+
+.block-yellow .card-title {
+  color: $text-primary;
+}
+
+/* 卡片内文字颜色自适应 */
+.block-pink .card-text,
+.block-green .card-text,
+.block-blue .card-text,
+.block-purple .card-text,
+.block-orange .card-text {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.block-yellow .card-text {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+/* 圆角工具类 */
+.rounded-xxl { border-radius: $uni-border-radius-xxl; }
+.rounded-xl { border-radius: $uni-border-radius-xl; }
+.rounded-lg { border-radius: $uni-border-radius-lg; }
+.rounded-md { border-radius: $uni-border-radius-base; }
+.rounded-sm { border-radius: $uni-border-radius-sm; }
+.rounded-circle { border-radius: $uni-border-radius-circle; }
+
+/* 背景工具类 */
+.soft-bg { background: $brand-soft; }
+.primary-bg { background: $module-primary; }
+.learning-bg { background: $module-learning; }
+.game-bg { background: $module-game; }
+.achievement-bg { background: $module-achievement; }
+.creative-bg { background: $module-creative; }
+
+/* 文字工具类 */
+.text-primary { color: $text-primary; }
+.text-secondary { color: $text-secondary; }
+.text-light { color: $text-light; }
+.text-accent { color: $uni-color-primary; }
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+/* 间距工具类 */
+.mt-xs { margin-top: $space-xs; }
+.mt-sm { margin-top: $space-sm; }
+.mt-md { margin-top: $space-md; }
+.mt-lg { margin-top: $space-lg; }
+.mt-xl { margin-top: $space-xl; }
+
+.mb-xs { margin-bottom: $space-xs; }
+.mb-sm { margin-bottom: $space-sm; }
+.mb-md { margin-bottom: $space-md; }
+.mb-lg { margin-bottom: $space-lg; }
+.mb-xl { margin-bottom: $space-xl; }
+
+.ml-xs { margin-left: $space-xs; }
+.ml-sm { margin-left: $space-sm; }
+.ml-md { margin-left: $space-md; }
+.ml-lg { margin-left: $space-lg; }
+.ml-xl { margin-left: $space-xl; }
+
+.mr-xs { margin-right: $space-xs; }
+.mr-sm { margin-right: $space-sm; }
+.mr-md { margin-right: $space-md; }
+.mr-lg { margin-right: $space-lg; }
+.mr-xl { margin-right: $space-xl; }
+
+/* 内边距工具类 */
+.pt-xs { padding-top: $space-xs; }
+.pt-sm { padding-top: $space-sm; }
+.pt-md { padding-top: $space-md; }
+.pt-lg { padding-top: $space-lg; }
+.pt-xl { padding-top: $space-xl; }
+
+.pb-xs { padding-bottom: $space-xs; }
+.pb-sm { padding-bottom: $space-sm; }
+.pb-md { padding-bottom: $space-md; }
+.pb-lg { padding-bottom: $space-lg; }
+.pb-xl { padding-bottom: $space-xl; }
+
+.pl-xs { padding-left: $space-xs; }
+.pl-sm { padding-left: $space-sm; }
+.pl-md { padding-left: $space-md; }
+.pl-lg { padding-left: $space-lg; }
+.pl-xl { padding-left: $space-xl; }
+
+.pr-xs { padding-right: $space-xs; }
+.pr-sm { padding-right: $space-sm; }
+.pr-md { padding-right: $space-md; }
+.pr-lg { padding-right: $space-lg; }
+.pr-xl { padding-right: $space-xl; }
+
+/* 弹性布局工具类 */
+.flex { display: flex; }
+.flex-column { flex-direction: column; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.align-center { align-items: center; }
+.flex-1 { flex: 1; }
+
+/* 动画工具类 - 简约流畅 */
+.motion-fade-up {
+  transform: translateY(16rpx);
+  opacity: 0;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.motion-fade-up.in {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.motion-scale-in {
+  transform: scale(0.95);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.motion-scale-in.in {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.motion-slide-in {
+  transform: translateX(-20rpx);
+  opacity: 0;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.motion-slide-in.in {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* 延迟动画类 */
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+.delay-300 { transition-delay: 0.3s; }
+.delay-400 { transition-delay: 0.4s; }
+.delay-500 { transition-delay: 0.5s; }
+
+/* 波纹效果 - 简约柔和 */
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+  }
+  
+  &:active::after {
+    width: 300rpx;
+    height: 300rpx;
+  }
+}
+
+/* 角色动画 - 简约可爱 */
 @keyframes bob {
   0% { transform: translateY(0); }
-  50% { transform: translateY(-8rpx); }
+  50% { transform: translateY(-6rpx); }
   100% { transform: translateY(0); }
 }
 
@@ -187,21 +513,26 @@ $text-error: #ff6b6b;
 
 @keyframes wave {
   0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(20deg); }
-  75% { transform: rotate(-20deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-15deg); }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10rpx); }
+  50% { transform: translateY(-8rpx); }
 }
 
 @keyframes sparkle {
-  0%, 100% { opacity: 0.3; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.2); }
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
 }
 
-/* --- Responsive helpers --- */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.03); opacity: 1; }
+}
+
+/* 响应式工具 */
 $breakpoint-sm: 420px; /* small screens */
 $breakpoint-md: 768px;
 
@@ -209,48 +540,38 @@ $breakpoint-md: 768px;
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 20rpx;
-  padding-right: 20rpx;
+  padding-left: 24rpx;
+  padding-right: 24rpx;
   box-sizing: border-box;
   max-width: 720rpx;
 }
 
-/* responsive utilities for H5: fallback to rpx for small devices */
-@media (max-width: $breakpoint-sm) {
-  .card { padding: 16rpx; border-radius: 16rpx; }
-  .btn-primary { padding: 14rpx 24rpx; border-radius: 24rpx; font-size: 16rpx; }
-  .btn-secondary { padding: 14rpx 24rpx; border-radius: 24rpx; font-size: 16rpx; }
-}
-
-/* motion tokens */
-$motion-fast: 150ms;
+/* 动画时长变量 - 统一控制 */
+$motion-fast: 200ms;
 $motion-medium: 300ms;
-$motion-slow: 500ms;
+$motion-slow: 400ms;
 
-.motion-fade-up {
-  transform: translateY(8rpx);
-  opacity: 0;
-  transition: transform $motion-medium ease, opacity $motion-medium ease;
+/* 年龄选项卡片样式 - 简约多彩 */
+.opt-3 { background: #fff0f5; border:1rpx solid rgba(255,126,179,0.2); }
+.opt-4 { background: #fff9e6; border:1rpx solid rgba(255,217,61,0.2); }
+.opt-5 { background: #f0fff4; border:1rpx solid rgba(107,207,127,0.2); }
+.opt-6 { background: #f0f4ff; border:1rpx solid rgba(167,139,250,0.2); }
+
+.option {
+  transition: transform $motion-fast ease, box-shadow $motion-fast ease;
+  border-radius: $uni-border-radius-xl;
 }
-.motion-fade-up.in {
-  transform: translateY(0);
-  opacity: 1;
+
+.option:hover {
+  transform: translateY(-4rpx);
+  box-shadow: $shadow-card-hover;
 }
 
-/* option color variants for age cards - cute colorful gradients */
-.opt-3 { background: linear-gradient(135deg,#fff0f5,#ffe4ec); border:2rpx solid rgba(255,126,179,0.3); }
-.opt-4 { background: linear-gradient(135deg,#fff9e6,#ffe9b3); border:2rpx solid rgba(255,217,61,0.3); }
-.opt-5 { background: linear-gradient(135deg,#f0fff4,#d4ffc4); border:2rpx solid rgba(107,207,127,0.3); }
-.opt-6 { background: linear-gradient(135deg,#f0f4ff,#e0d4ff); border:2rpx solid rgba(167,139,250,0.3); }
+.option:active {
+  transform: translateY(-2rpx) scale(0.98);
+}
 
-.option { transition: transform $motion-fast ease, box-shadow $motion-fast ease; }
-.option:hover { transform: translateY(-6rpx); box-shadow: 0 16rpx 36rpx rgba(255,126,179,0.2); }
-.option:active { transform: translateY(-2rpx) scale(0.98); }
-
-.btn-primary { transition: transform $motion-fast ease, box-shadow $motion-fast ease, opacity $motion-fast ease; }
-.btn-primary:active { transform: translateY(1rpx) scale(0.95); box-shadow: 0 4rpx 12rpx rgba(255,154,86,0.2); }
-
-/* Decoration elements */
+/* 装饰元素 - 简约有趣 */
 .decoration-star {
   animation: sparkle 2s ease-in-out infinite;
 }
@@ -262,5 +583,9 @@ $motion-slow: 500ms;
 .decoration-heart {
   animation: float 3s ease-in-out infinite;
   animation-delay: 1s;
+}
+
+.decoration-pulse {
+  animation: pulse 2s ease-in-out infinite;
 }
 

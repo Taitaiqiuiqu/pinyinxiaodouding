@@ -11,7 +11,6 @@
 2. 模板不随年龄变化，**内容与引导策略随年龄变化**
 3. 所有模板必须包含：
    - 核心内容区
-   - 角色引导区（RoleGuide）
    - 音频触发点
 
 ---
@@ -28,17 +27,12 @@
 
 [MainVisual]
   - 大图 / 动画
-
-[RoleGuide]
-  - role_idle / role_speak
 ```
 
 ### 必须组件
-- RoleGuide
 - AudioPlayer（自动播放）
 
 ### 必用素材
-- role_idle.png
 - guide_welcome_x-x_01.mp3
 
 ### 示例引导文案
@@ -60,14 +54,13 @@
   - 5–6
   - 6–8
 
-[RoleGuide + HandGuide]
+# [悬浮HandGuide] - 条件显示，不固定占用空间
 ```
 
 ### 交互规则
 - 点击年龄卡 → 语音确认 + 进入课程
 
 ### 必用素材
-- role_point.png
 - hand_click.png
 - guide_click_3-6_01.mp3
 
@@ -87,17 +80,13 @@
 
 [ActionButton]
   - 点击跟读
-
-[RoleGuide]
 ```
 
 ### 行为流程
-1. 角色讲解
-2. 点击 → 跟读音频
-3. 成功反馈
+1. 点击 → 跟读音频
+2. 成功反馈
 
 ### 必用素材
-- role_speak.png
 - phonics_xx_x-x_01.mp3
 
 ---
@@ -114,7 +103,7 @@
 
 [GameArea]
 
-[RoleGuide + HandGuide]
+# [悬浮HandGuide] - 条件显示，不固定占用空间
 ```
 
 ### 交互规则
@@ -122,8 +111,6 @@
 - 操作正确 → 即时反馈
 
 ### 必用素材
-- role_point.png
-- role_cheer.png
 - feedback_success_*.mp3
 - feedback_fail_*.mp3
 
@@ -140,12 +127,9 @@
 
 [ResultVisual]
   - 成功 / 鼓励动画
-
-[RoleGuide]
 ```
 
 ### 必用素材
-- role_cheer.png
 - feedback_success_*.mp3
 
 ### 示例文案
@@ -175,14 +159,14 @@
 ---
 ## 八、模板与素材映射表
 
-| 模板 | 角色图 | 是否使用小手 |
-|---|---|---|
-| 欢迎页 | role_idle | 否 |
-| 年龄选择 | role_point | 是 |
-| 学习页 | role_speak | 视年龄 |
-| 游戏页 | role_point / cheer | 是 |
-| 反馈页 | role_cheer | 否 |
-| 家长页 | 无 | 否 |
+| 模板 | 是否使用小手 |
+|---|---|
+| 欢迎页 | 否 |
+| 年龄选择 | 是 |
+| 学习页 | 视年龄 |
+| 游戏页 | 是 |
+| 反馈页 | 否 |
+| 家长页 | 否 |
 
 ---
 ## 九、AI 编译器强制约束

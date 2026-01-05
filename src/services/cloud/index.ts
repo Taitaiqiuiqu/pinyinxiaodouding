@@ -38,10 +38,8 @@ export async function callFunction(name: string, data?: any): Promise<any> {
 
 export function getDatabase(): any {
   // #ifdef MP-WEIXIN
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  // Note: dynamic import for db reference
   // @ts-ignore
-  if (typeof wx !== 'undefined' && wx.cloud) {
+  if (wx && wx.cloud && wx.cloud.database) {
     // @ts-ignore
     return wx.cloud.database()
   }
@@ -52,10 +50,10 @@ export function getDatabase(): any {
 export async function updateAge(ageLevel: number): Promise<{ success: boolean; message: string }> {
   try {
     let openid = ''
-    const storeModule = await import('../../store/global')
-    const useStoreFn = storeModule.useGlobalStore || (storeModule.default && storeModule.default.useGlobalStore)
-    if (typeof useStoreFn === 'function') {
-      const store = useStoreFn()
+    // 小程序环境中动态导入可能有问题，改为直接导入
+    const { useGlobalStore } = await import('../../store/global')
+    if (useGlobalStore) {
+      const store = useGlobalStore()
       openid = store.openid || ''
     }
     if (!openid) {

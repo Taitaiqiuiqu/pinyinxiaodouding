@@ -1,9 +1,8 @@
-import { getAudioInfo, getAudioTempURL } from './cloud/audio'
+import { getAudioInfo } from './cloud/audio'
 
 class GlobalAudioManager {
   private static instance: GlobalAudioManager | null = null
   private ctx: UniApp.InnerAudioContext | null = null
-  private isInitialized: boolean = false
   private isPlaying: boolean = false
   private currentAudioFile: string = ''
   private audioType: string = ''
@@ -22,15 +21,18 @@ class GlobalAudioManager {
   }
 
   private init() {
-    if (typeof uni !== 'undefined' && uni.createInnerAudioContext) {
+    if (uni && typeof uni.createInnerAudioContext === 'function') {
       this.ctx = uni.createInnerAudioContext()
+      // 在小程序中，需要设置 autoplay: false 来避免自动播放问题
+      this.ctx.autoplay = false
+      // 设置音量，默认音量可能过小
+      this.ctx.volume = 1
       this.ctx.onEnded(() => this.onEnded())
       this.ctx.onError((e) => this.onError(e))
       this.ctx.onCanplay(() => this.onCanplay())
       this.ctx.onPlay(() => this.onPlay())
       this.ctx.onWaiting(() => this.onWaiting())
       this.ctx.onStop(() => this.onStop())
-      this.isInitialized = true
       console.log('[GlobalAudioManager] context created')
     } else {
       console.error('[GlobalAudioManager] uni.createInnerAudioContext not available')
@@ -96,13 +98,14 @@ class GlobalAudioManager {
     
     // 如果缓存中没有，从云端加载
     if (!audioURL) {
-      audioURL = await this.loadAudioFromCloud(this.currentAudioFile, this.audioType)
+      const tempAudioURL = await this.loadAudioFromCloud(this.currentAudioFile, this.audioType)
       
-      if (!audioURL) {
+      if (!tempAudioURL) {
         console.error('[GlobalAudioManager] 云端音频加载失败，无法播放音频:', this.currentAudioFile)
         return
       }
       
+      audioURL = tempAudioURL
       // 缓存音频URL
       this.audioCache.set(cacheKey, audioURL)
       console.log('[GlobalAudioManager] 音频URL已缓存:', cacheKey)

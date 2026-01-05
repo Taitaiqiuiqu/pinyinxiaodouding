@@ -48,7 +48,9 @@ export async function getAudioInfo(audioId: string, audioType: string = 'guide')
           }
         } catch (tempError) {
           console.error('[AudioService] ❌ 获取临时链接失败:', tempError)
-          console.error('[AudioService] 临时链接错误详情:', tempError.stack)
+          if (typeof tempError === 'object' && tempError !== null && 'stack' in tempError) {
+            console.error('[AudioService] 临时链接错误详情:', (tempError as Error).stack)
+          }
         }
       }
       

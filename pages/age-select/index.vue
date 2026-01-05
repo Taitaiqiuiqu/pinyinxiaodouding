@@ -1,15 +1,14 @@
 <template>
   <view class="page age-select-page">
     <AudioPlayer ref="audio" />
-    <view class="top-area container">
-      <RoleGuide :roleType="'idle'" :guideText="guideText" />
+
+    <view class="header">
+      <text class="page-title">选择年龄</text>
+      <text class="page-subtitle">选择孩子所在年龄段，界面将展示对应课程</text>
     </view>
 
-    <view class="center-area card container">
-      <text class="title">请选择年龄</text>
-      <text class="subtitle">选择孩子所在年龄段，界面将展示对应课程</text>
-
-      <!-- Age options -->
+    <!-- Age options -->
+    <view class="content-area">
       <view class="age-options">
         <view
           class="option motion-fade-up"
@@ -24,13 +23,17 @@
         </view>
       </view>
     </view>
+
+    <!-- 装饰元素 -->
+    <view class="decoration decoration-1"></view>
+    <view class="decoration decoration-2"></view>
+    <view class="decoration decoration-3"></view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import RoleGuide from '../../src/components/RoleGuide/RoleGuide.vue'
 import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue'
 import { useGlobalStore } from '../../src/store/global'
 import { updateAge } from '../../src/services/cloud'
@@ -39,7 +42,6 @@ import GlobalAudioManager from '../../src/services/GlobalAudioManager'
 const audio = ref<any>(null)
 
 // 响应式数据
-const guideText = ref('请选择适合孩子的年龄')
 const options = ref([
   { value: 1, label: '3-4 岁', icon: '🌸' },
   { value: 2, label: '4-5 岁', icon: '⭐' },
@@ -61,7 +63,6 @@ const selectAge = async (ageLevel: number) => {
   // 停止循环播放音频
   const audioManager = GlobalAudioManager.getInstance()
   audioManager.stopLoop()
-  
   const store = useGlobalStore()
   store.setAgeLevel(ageLevel)
   uni.setStorageSync('ageLevel', ageLevel)
@@ -76,7 +77,9 @@ const selectAge = async (ageLevel: number) => {
     if (result.success) {
       uni.showToast({ title: '保存成功', icon: 'success' })
       // 跳转到home页面
-      uni.navigateTo({ url: '/pages/home/index' })
+      setTimeout(() => {
+        uni.navigateTo({ url: '/pages/home/index' })
+      }, 1000)
     } else {
       uni.showToast({ title: result.message, icon: 'none' })
     }
@@ -88,71 +91,232 @@ const selectAge = async (ageLevel: number) => {
 </script>
 
 <style scoped>
-.page.age-select-page { padding: 28rpx; background: linear-gradient(135deg, #fff9f5 0%, #ffeef8 100%); min-height:100vh; display:flex; flex-direction:column; align-items:center; position:relative; overflow:hidden; }
-
-/* Decorative elements - cute and colorful */
-.page.age-select-page::before,
-.page.age-select-page::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.25;
-  z-index: 0;
+/* 页面基础样式 - 积木风格纯色背景 */
+.page.age-select-page {
+  padding: 0;
+  background: #3B82F6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
 }
 
-.page.age-select-page::before {
-  width: 300rpx;
-  height: 300rpx;
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-  top: -150rpx;
-  left: -150rpx;
-  animation: float 6s ease-in-out infinite;
-}
-
-.page.age-select-page::after {
-  width: 220rpx;
-  height: 220rpx;
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-  bottom: -110rpx;
-  right: -110rpx;
-  animation: float 5s ease-in-out infinite;
-  animation-delay: 2s;
-}
-
-.page.age-select-page > view {
+/* 页面头部 */
+.header {
+  text-align: center;
+  margin-top: 100rpx;
+  margin-bottom: 60rpx;
   position: relative;
   z-index: 1;
 }
 
-.center-area { width:100%; max-width:720rpx; display:flex; flex-direction:column; align-items:center; margin-top:40rpx; }
-.title { font-size:36rpx; font-weight:700; margin-bottom:12rpx; color:#2d3436; }
-.subtitle { color:#636e72; margin-bottom:20rpx; font-size:16rpx; }
-.card { width:100%; background: linear-gradient(180deg,#ffffff,#fff9f5); box-shadow: 0 12rpx 32rpx rgba(255,126,179,0.15); padding:24rpx; border-radius:24rpx; }
-.age-options { width:100%; display:flex; flex-wrap:wrap; gap:16rpx; justify-content:center; margin-top:20rpx; }
-.option { width:45%; background: linear-gradient(180deg,#ffffff,#f8fbff); border:2rpx solid #e6eef9; padding:24rpx; border-radius:20rpx; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow: 0 8rpx 20rpx rgba(255,126,179,0.12); position:relative; overflow:hidden; }
-.opt-label { font-size:20rpx; color:#2d3436; font-weight:600; }
-.opt-icon { font-size:48rpx; margin-bottom:8rpx; }
-
-/* Responsive adjustments */
-@media (max-width: 420px) {
-  .option { width: 100%; }
-  .center-area.card { padding: 20rpx !important; border-radius: 20rpx !important; }
+.page-title {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 16rpx;
+  text-shadow: 2rpx 2rpx 8rpx rgba(0, 0, 0, 0.2);
+  animation: fadeUp 0.6s ease forwards;
 }
 
-/* Animations & interactions */
-.motion-fade-up { transform: translateY(10rpx); opacity: 0; animation: fadeUp 500ms forwards; }
-@keyframes fadeUp { to { transform: translateY(0); opacity: 1; } }
-.option { transition: transform 200ms ease, box-shadow 200ms ease, opacity 250ms ease; }
-.option:active { transform: translateY(4rpx) scale(0.97); box-shadow: 0 6rpx 16rpx rgba(255,126,179,0.15); }
-.option:hover { transform: translateY(-8rpx); box-shadow: 0 20rpx 48rpx rgba(255,126,179,0.25); }
+.page-subtitle {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  text-align: center;
+  max-width: 80%;
+  margin: 0 auto;
+  animation: fadeUp 0.6s ease 0.2s forwards;
+  opacity: 0;
+}
 
-/* Colored variants for age options - cute colorful gradients */
-.opt-3 { background: linear-gradient(135deg,#fff0f5,#ffe4ec); border-color: rgba(255,126,179,0.4); }
-.opt-3 .opt-icon { content: '🌸'; }
-.opt-4 { background: linear-gradient(135deg,#fff9e6,#ffe9b3); border-color: rgba(255,217,61,0.4); }
-.opt-4 .opt-icon { content: '⭐'; }
-.opt-5 { background: linear-gradient(135deg,#f0fff4,#d4ffc4); border-color: rgba(107,207,127,0.4); }
-.opt-5 .opt-icon { content: '🌱'; }
-.opt-6 { background: linear-gradient(135deg,#f0f4ff,#e0d4ff); border-color: rgba(167,139,250,0.4); }
-.opt-6 .opt-icon { content: '🌈'; }
+/* 主要内容区域 */
+.content-area {
+  width: 100%;
+  max-width: 720rpx;
+  position: relative;
+  z-index: 1;
+  padding: 0 28rpx;
+}
+
+/* 装饰元素 - 积木风格 */
+.decoration {
+  position: fixed;
+  opacity: 0.6;
+  z-index: 0;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.2);
+}
+
+.decoration-1 {
+  width: 280rpx;
+  height: 280rpx;
+  background: #FBBF24;
+  border-radius: 24rpx;
+  top: -80rpx;
+  left: -80rpx;
+  transform: rotate(15deg);
+  animation: float 6s ease-in-out infinite;
+}
+
+.decoration-2 {
+  width: 240rpx;
+  height: 240rpx;
+  background: #10B981;
+  border-radius: 24rpx;
+  bottom: -120rpx;
+  right: -120rpx;
+  transform: rotate(-10deg);
+  animation: float 8s ease-in-out infinite reverse;
+  animation-delay: 2s;
+}
+
+.decoration-3 {
+  width: 160rpx;
+  height: 160rpx;
+  background: #FF476F;
+  border-radius: 24rpx;
+  top: 20%;
+  right: 10%;
+  transform: rotate(30deg);
+  animation: float 5s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20rpx); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(40rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 年龄选项样式 */
+.age-options {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28rpx;
+  justify-content: center;
+  margin-top: 20rpx;
+}
+
+.option {
+  width: 45%;
+  background: #FFFFFF;
+  padding: 32rpx;
+  border-radius: 28rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 8rpx solid #FFFFFF;
+}
+
+/* 年龄选项图标和文字 */
+.opt-icon {
+  font-size: 64rpx;
+  margin-bottom: 16rpx;
+  animation: float 3s ease-in-out infinite;
+  transition: transform 0.25s ease;
+}
+
+.opt-label {
+  font-size: 28rpx;
+  color: #2d3436;
+  font-weight: 700;
+  letter-spacing: 0.5rpx;
+}
+
+.option:hover .opt-icon {
+  transform: scale(1.15);
+  animation: none;
+}
+
+/* 选项悬停效果 */
+.option:active {
+  transform: translateY(6rpx) scale(0.98);
+  box-shadow: 0 6rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.option:hover {
+  transform: translateY(-6rpx);
+}
+
+/* 动画效果 */
+.motion-fade-up {
+  opacity: 0;
+  transform: translateY(40rpx) scale(0.95);
+  animation: fadeUp 0.6s ease forwards;
+}
+
+/* 选项颜色变体 - 积木风格纯色 */
+.opt-1 {
+  background: #FF476F;
+  box-shadow: 0 12rpx 0 #E53E5F;
+}
+
+.opt-2 {
+  background: #FBBF24;
+  box-shadow: 0 12rpx 0 #D97706;
+}
+
+.opt-3 {
+  background: #10B981;
+  box-shadow: 0 12rpx 0 #059669;
+}
+
+.opt-4 {
+  background: #8B5CF6;
+  box-shadow: 0 12rpx 0 #7C3AED;
+}
+
+/* 选项文字颜色适配 */
+.opt-1 .opt-label,
+.opt-2 .opt-label,
+.opt-3 .opt-label,
+.opt-4 .opt-label {
+  color: #FFFFFF;
+}
+
+/* 添加微妙的装饰元素 */
+.option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: #FFFFFF;
+  opacity: 0.6;
+  z-index: 1;
+}
+
+.option::after {
+  content: '';
+  position: absolute;
+  top: 12rpx;
+  right: 12rpx;
+  width: 20rpx;
+  height: 20rpx;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 24%;
+  animation: twinkle 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.5; transform: scale(1); }
+}
 </style>
