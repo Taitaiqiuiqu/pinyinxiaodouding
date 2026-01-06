@@ -23,7 +23,49 @@
 			"style": {
 				"navigationBarTitleText": "主页"
 			}
+		},
+		{
+			"path": "pages/parent-settings/index",
+			"style": {
+				"navigationBarTitleText": "家长设置"
+			}
+		},
+		{
+			"path": "pages/phonics/index",
+			"style": {
+				"navigationBarTitleText": "拼音启蒙"
+			}
+		},
+		{
+		"path": "pages/phonics/pronunciation/index",
+		"style": {
+			"navigationBarTitleText": "拼音跟读"
 		}
+	},
+	{
+		"path": "pages/phonics/pronunciation/shengmu",
+		"style": {
+			"navigationBarTitleText": "声母学习"
+		}
+	},
+	{
+		"path": "pages/phonics/pronunciation/yunmu",
+		"style": {
+			"navigationBarTitleText": "韵母学习"
+		}
+	},
+	{
+		"path": "pages/phonics/pronunciation/zhengti",
+		"style": {
+			"navigationBarTitleText": "整体认读"
+		}
+	},
+	{
+		"path": "pages/phonics/pronunciation/study",
+		"style": {
+			"navigationBarTitleText": "学习"
+		}
+	}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

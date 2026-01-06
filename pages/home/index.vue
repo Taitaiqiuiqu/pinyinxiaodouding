@@ -12,7 +12,7 @@
       <!-- 功能模块卡片 -->
       <view class="module-grid">
         <!-- 拼音启蒙卡片 -->
-        <view id="card1" class="module-card card-primary" @tap="showComingSoon('拼音启蒙')" ref="card1">
+        <view id="card1" class="module-card card-primary" @tap="navigateTo('/pages/phonics/index')" ref="card1">
           <view class="card-content">
             <Icon name="course" size="100rpx" color="#FFFFFF" />
             <text class="card-title">拼音启蒙</text>
@@ -39,7 +39,7 @@
         </view>
 
         <!-- 家长设置卡片 -->
-        <view id="card4" class="module-card card-quaternary" @tap="showComingSoon('家长设置')" ref="card4">
+        <view id="card4" class="module-card card-quaternary" @tap="navigateTo('/pages/parent-settings/index')" ref="card4">
           <view class="card-content">
             <Icon name="parent" size="100rpx" color="#FFFFFF" />
             <text class="card-title">家长设置</text>
@@ -242,13 +242,12 @@ const currentGuideStyle = computed(() => {
     width: `${highlightRect.value.width}px`,
     height: `${highlightRect.value.height}px`,
     borderRadius: '32rpx',
-    background: 'rgba(255, 255, 255, 0.15)',
-    // 增强高亮效果：更亮的遮罩层，更强的边框光晕
+    background: 'transparent',
+    // 精确高亮：区域完全透明，只保留边缘高亮
     boxShadow: `
-      0 0 0 9999rpx rgba(0, 0, 0, 0.35),
-      0 0 0 6rpx rgba(255, 255, 255, 0.8),
-      0 0 30rpx 8rpx rgba(255, 255, 255, 0.4),
-      0 0 15rpx 0 rgba(255, 255, 255, 0.6) inset
+      0 0 0 9999rpx rgba(0, 0, 0, 0.2),
+      0 0 0 10rpx rgba(255, 255, 255, 1),
+      0 0 60rpx 20rpx rgba(255, 255, 255, 0.7)
     `,
     zIndex: 9998,
     pointerEvents: 'none'
