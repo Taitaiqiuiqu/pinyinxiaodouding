@@ -562,7 +562,7 @@ export default {
     }
     
     // 加载学习进度
-    this.loadProgress();
+    this.loadCurrentItemProgress();
     
     // 自动播放一次发音
     setTimeout(() => {

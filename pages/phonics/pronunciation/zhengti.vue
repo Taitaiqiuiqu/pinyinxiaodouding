@@ -89,6 +89,9 @@ export default {
   onLoad() {
     this.loadProgress();
   },
+  onShow() {
+    this.loadProgress();
+  },
   methods: {
     goBack() {
       uni.navigateBack();
