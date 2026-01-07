@@ -1,0 +1,12 @@
+{
+  "name": "syncAudioToDB",
+  "version": "1.0.0",
+  "description": "云函数：同步云端音频信息到数据库",
+  "main": "index.js",
+  "scripts": {},
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

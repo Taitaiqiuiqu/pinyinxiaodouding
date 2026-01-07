@@ -21,48 +21,77 @@
     <view class="main-content">
       <!-- 核心内容区 -->
       <view class="core-content">
-        <view class="main-char" @click="toggleDetails">
-          <text class="char-text">{{ currentItem.name }}</text>
-        </view>
-        
-        <!-- 拼音标注（点击后显示） -->
-        <view v-if="showDetails" class="pinyin-display">
-          <text class="pinyin-text">{{ currentItem.pinyin || currentItem.name }}</text>
-        </view>
-        
-        <!-- 主要操作按钮 -->
-        <view class="main-action">
-          <view class="play-btn" @click="playAudio">
-            <text class="play-icon">🔊</text>
-            <text class="play-text">听发音</text>
+        <!-- 字母展示区 -->
+        <view class="letter-display">
+          <view class="main-char" :animation="animationData" @click="onLetterClick">
+            <text class="char-text">{{ currentItem.name }}</text>
           </view>
         </view>
-      </view>
-      
-      <!-- 辅助功能区（需要时显示） -->
-      <view v-if="showDetails" class="details-content">
-        <!-- 示例词语（简化为一个） -->
-        <view v-if="exampleWords.length > 0" class="example-word">
-          <text class="word-text">{{ exampleWords[0].text }}</text>
-          <text class="word-pinyin">{{ exampleWords[0].pinyin }}</text>
-          <view class="word-audio" @click="playWordAudio(exampleWords[0])">🔊</view>
+        
+        <!-- 阶段标题 -->
+        <view class="stage-title">
+          <text class="stage-text">{{ stageTitle }}</text>
         </view>
         
-        <!-- 简化自评 -->
-        <view class="simple-assessment">
-          <view class="assessment-btn" :class="{ active: assessment === 'mastered' }" @click="setAssessment('mastered')">
-            <text class="assessment-text">学会了</text>
+        <!-- 声调学习区 -->
+        <view v-if="learningStage === 'tone'" class="tone-learning-area">
+          <view class="current-tone-display">
+            <view class="tone-char-container">
+              <text class="tone-symbol">{{ currentToneData.symbol }}</text>
+              <text class="tone-letter">{{ currentItem.name }}</text>
+            </view>
+            <text class="tone-name">{{ currentToneData.name }}</text>
           </view>
-          <view class="assessment-btn" @click="setAssessment('learning')">
-            <text class="assessment-text">再学学</text>
+          
+          <view class="tone-progress">
+            <view 
+              v-for="(tone, index) in tones" 
+              :key="index"
+              class="tone-progress-item"
+              :class="{ 
+                active: index === currentToneIndex,
+                completed: index < currentToneIndex 
+              }"
+            ></view>
+          </view>
+          
+          <view class="tone-actions">
+            <view class="block-btn skip-btn" @click="skipTone">
+              <text class="btn-text">跳过</text>
+            </view>
+            <view class="block-btn next-btn" @click="nextTone">
+              <text class="btn-text">下一步</text>
+            </view>
           </view>
         </view>
-      </view>
-      
-      <!-- 简化导航 -->
-      <view v-if="showDetails" class="simple-nav">
-        <view class="nav-btn" v-if="!isLastItem" @click="goNext">
-          <text class="nav-text">下一个 →</text>
+        
+        <!-- 组词练习区 -->
+        <view v-if="learningStage === 'words'" class="word-learning-area">
+          <view class="current-word-display" @click="playWordAudio(currentWordData)">
+            <text class="word-text">{{ currentWordData.text }}</text>
+            <text class="word-pinyin">{{ currentWordData.pinyin }}</text>
+          </view>
+          
+          <view class="word-progress">
+            <view 
+              v-for="(word, index) in currentItem.examples" 
+              :key="index"
+              class="word-progress-item"
+              :class="{ 
+                active: index === currentWordIndex,
+                completed: index < currentWordIndex 
+              }"
+            ></view>
+          </view>
+          
+          <view class="word-actions">
+            <view class="block-btn skip-btn" @click="skipWord">
+              <text class="btn-text">跳过</text>
+            </view>
+            <view class="block-btn next-btn" @click="nextWord">
+              <text class="btn-text">下一步</text>
+            </view>
+          </view>
         </view>
       </view>
       
@@ -80,6 +109,9 @@
 </template>
 
 <script>
+import { pinyinAudioPlayer } from '@/src/services/PinyinAudioPlayer'
+import { parseWordPinyin, audioFileExists } from '@/src/services/pinyinAudio'
+
 export default {
   name: 'StudyPage',
   data() {
@@ -87,9 +119,29 @@ export default {
       type: '',
       name: '',
       currentIndex: 0,
-      repeatCount: 1,
       assessment: '',
       showDetails: false, // 控制详细内容的显示
+      currentTone: 1, // 当前选择的声调
+      learningStage: 'initial', // 学习阶段: initial(初始), tone(声调学习), words(组词练习)
+      currentToneIndex: 0, // 当前学习的声调索引
+      currentWordIndex: 0, // 当前学习的词语索引
+      animationData: {}, // 动画数据
+      // 字母组合数据
+      letterGroups: [
+        { suffix: 'a', name: 'a' },
+        { suffix: 'o', name: 'o' },
+        { suffix: 'e', name: 'e' },
+        { suffix: 'i', name: 'i' },
+        { suffix: 'u', name: 'u' },
+        { suffix: 'ü', name: 'ü' }
+      ],
+      // 四声调数据
+      tones: [
+        { symbol: '¯', name: '一声' },
+        { symbol: '´', name: '二声' },
+        { symbol: 'ˇ', name: '三声' },
+        { symbol: '`', name: '四声' }
+      ],
       shengmuData: [
         { name: 'b', examples: [
           { text: '波浪', pinyin: 'bō làng' },
@@ -472,17 +524,40 @@ export default {
     },
     isLastItem() {
       return this.currentIndex === this.totalCount - 1;
+    },
+    showGroups() {
+      const result = this.showDetails;
+      console.log('showGroups computed:', result, 'showDetails:', this.showDetails);
+      return result;
+    },
+    currentToneData() {
+      return this.tones[this.currentToneIndex] || {};
+    },
+    currentWordData() {
+      const words = this.currentItem.examples || [];
+      return words[this.currentWordIndex] || {};
+    },
+    stageTitle() {
+      const stageMap = {
+        'initial': '点击字母开始学习',
+        'tone': `声调学习 - ${this.currentToneData.name}`,
+        'words': '组词练习'
+      };
+      return stageMap[this.learningStage] || '';
     }
   },
   onLoad(options) {
     this.type = options.type || '';
     this.name = options.name || '';
     
+    console.log('onLoad - type:', this.type, 'name:', this.name);
+    
     // 根据名称找到对应的索引
     if (this.name) {
       const index = this.currentData.findIndex(item => item.name === this.name);
       if (index !== -1) {
         this.currentIndex = index;
+        console.log('onLoad - currentIndex set to:', this.currentIndex);
       }
     }
     
@@ -491,33 +566,42 @@ export default {
     
     // 自动播放一次发音
     setTimeout(() => {
-      this.playAudio();
+      console.log('onLoad - calling onLetterClick');
+      this.onLetterClick(); // 直接点击字母，播放音频并显示详细内容
     }, 1000);
   },
   methods: {
     goBack() {
       uni.navigateBack();
     },
-    playAudio() {
-      // 播放当前拼音的音频
-      // 这里应该调用音频播放API
-      console.log(`播放 ${this.currentItem.name} 的音频`);
-      
-      // 如果设置了重复次数，则重复播放
-      if (this.repeatCount > 1) {
-        let count = 1;
-        const playInterval = setInterval(() => {
-          console.log(`重复播放 ${this.currentItem.name} 的音频，第${count + 1}次`);
-          count++;
-          if (count >= this.repeatCount) {
-            clearInterval(playInterval);
-          }
-        }, 2000); // 每2秒播放一次
-      }
-    },
     playWordAudio(word) {
-      // 播放示例词语的音频
-      console.log(`播放词语 ${word.text} 的音频`);
+      const pinyin = word.pinyin || word.text || ''
+      
+      console.log('playWordAudio 被调用')
+      console.log('词语:', word.text)
+      console.log('拼音:', pinyin)
+      
+      const pinyinList = parseWordPinyin(pinyin)
+      
+      console.log('解析后的拼音列表:', pinyinList)
+      
+      if (pinyinList.length === 0) {
+        console.warn(`无法解析拼音: ${pinyin}`)
+        return
+      }
+      
+      console.log(`播放词语 ${word.text} 的拼音序列:`, pinyinList)
+      
+      pinyinAudioPlayer.playSequence({
+        pinyinList: pinyinList,
+        interval: 0,
+        onComplete: () => {
+          console.log(`播放词语 ${word.text} 完成`)
+        },
+        onError: (error) => {
+          console.error('播放失败:', error)
+        }
+      })
     },
     setRepeatCount(count) {
       this.repeatCount = count;
@@ -552,28 +636,233 @@ export default {
         this.loadCurrentItemProgress();
       }
     },
+    // 点击字母直接播放音频并进入声调学习阶段
+    onLetterClick() {
+      console.log('onLetterClick 开始执行');
+      
+      this.showDetails = true;
+      this.learningStage = 'tone';
+      this.currentToneIndex = 0;
+      this.currentWordIndex = 0;
+      
+      console.log('点击字母后 showDetails:', this.showDetails);
+      console.log('learningStage:', this.learningStage);
+      console.log('currentToneIndex:', this.currentToneIndex);
+      console.log('currentItem:', this.currentItem);
+      
+      this.playAudio();
+      console.log('onLetterClick 执行完成');
+      
+      // 播放字母音频后，自动播放第一个声调音频
+      setTimeout(() => {
+        this.playToneAudio(this.currentItem.name, 1);
+      }, 500);
+    },
+    
+    // 点击组词
+    onGroupClick(group) {
+      this.playGroupAudio(group);
+    },
+    
+    // 点击声调
+    onToneClick(tone) {
+      this.currentTone = tone;
+      this.playToneAudio(this.currentItem.name, tone);
+    },
+    
+    // 下一个
     goNext() {
       if (!this.isLastItem) {
-        this.currentIndex++;
-        this.assessment = '';
-        this.showDetails = false; // 重置详细内容显示状态
-        this.loadCurrentItemProgress();
+        this.saveProgress();
+        
+        // 自动进入下一个
+        setTimeout(() => {
+          this.currentIndex++;
+          this.assessment = '';
+          this.showDetails = false;
+          this.loadCurrentItemProgress();
+        }, 1000);
       }
     },
-    toggleDetails() {
-      this.showDetails = !this.showDetails;
-    },
-    loadProgress() {
-      try {
-        const progressKey = `${this.type}_progress`;
-        const savedProgress = uni.getStorageSync(progressKey);
+    
+    // 播放字母音频
+    playAudio() {
+      const pinyin = this.currentItem.name
+      
+      // 检查音频是否存在
+      const audioExists = audioFileExists(pinyin, 0)
+      
+      if (!audioExists) {
+        console.warn(`字母音频 ${pinyin}.mp3 不存在，尝试查找带声调的音频`)
         
-        if (savedProgress) {
-          // 加载当前项的学习状态
-          this.loadCurrentItemProgress();
+        // 尝试查找带声调的音频
+        for (let tone = 1; tone <= 4; tone++) {
+          if (audioFileExists(pinyin, tone)) {
+            console.log(`找到带声调的音频 ${pinyin}${tone}.mp3`)
+            this.playToneAudio(pinyin, tone)
+            this.animateLetterBlock()
+            return
+          }
         }
+        
+        console.warn(`字母音频 ${pinyin} 不存在，使用默认音频 a.mp3`)
+        
+        // 使用默认音频
+        pinyinAudioPlayer.play({
+          pinyin: 'a',
+          tone: 0,
+          onComplete: () => {
+            console.log(`播放默认音频 a.mp3 完成`)
+          },
+          onError: (error) => {
+            console.error('默认音频播放失败:', error)
+          }
+        })
+        
+        this.animateLetterBlock()
+        return
+      }
+      
+      // 播放字母音频
+      pinyinAudioPlayer.play({
+        pinyin: pinyin,
+        tone: 0,
+        onComplete: () => {
+          console.log(`播放 ${pinyin} 完成`)
+        },
+        onError: (error) => {
+          console.error('播放失败:', error)
+        }
+      })
+      
+      // 添加视觉反馈
+      this.animateLetterBlock();
+    },
+    
+    // 播放组词音频
+    playGroupAudio(group) {
+      const combination = this.currentItem.name + group.suffix
+      
+      // 检查组合音频是否存在
+      const audioExists = audioFileExists(combination, 0)
+      
+      if (!audioExists) {
+        console.warn(`组合音频 ${combination}.mp3 不存在，尝试查找带声调的音频`)
+        
+        // 尝试查找带声调的音频
+        for (let tone = 1; tone <= 4; tone++) {
+          if (audioFileExists(combination, tone)) {
+            console.log(`找到带声调的音频 ${combination}${tone}.mp3`)
+            this.playToneAudio(combination, tone)
+            return
+          }
+        }
+        
+        console.warn(`组合音频 ${combination} 不存在，使用默认音频 a.mp3`)
+        
+        // 使用默认音频
+        pinyinAudioPlayer.play({
+          pinyin: 'a',
+          tone: 0,
+          onComplete: () => {
+            console.log(`播放默认音频 a.mp3 完成`)
+          },
+          onError: (error) => {
+            console.error('默认音频播放失败:', error)
+          }
+        })
+        return
+      }
+      
+      // 播放组合音频
+      pinyinAudioPlayer.play({
+        pinyin: combination,
+        tone: 0,
+        onComplete: () => {
+          console.log(`播放组词 ${combination} 完成`)
+        },
+        onError: (error) => {
+          console.error('播放失败:', error)
+        }
+      })
+    },
+    
+    // 播放声调音频
+    playToneAudio(letter, tone) {
+      const toneSymbol = this.tones[tone - 1].symbol
+      const combination = letter + toneSymbol
+      
+      // 检查音频是否存在
+      const audioExists = audioFileExists(letter, tone)
+      
+      if (!audioExists) {
+        console.warn(`声调音频 ${letter}${tone}.mp3 不存在，尝试查找其他声调`)
+        
+        // 尝试查找其他声调的音频
+        for (let otherTone = 1; otherTone <= 4; otherTone++) {
+          if (otherTone !== tone && audioFileExists(letter, otherTone)) {
+            console.log(`找到其他声调的音频 ${letter}${otherTone}.mp3`)
+            pinyinAudioPlayer.play({
+              pinyin: letter,
+              tone: otherTone,
+              onComplete: () => {
+                console.log(`播放声调 ${letter}${this.tones[otherTone - 1].symbol} 完成`)
+              },
+              onError: (error) => {
+                console.error('播放失败:', error)
+              }
+            })
+            return
+          }
+        }
+        
+        console.warn(`声调音频 ${letter} 不存在，使用默认音频 a.mp3`)
+        
+        // 使用默认音频
+        pinyinAudioPlayer.play({
+          pinyin: 'a',
+          tone: 0,
+          onComplete: () => {
+            console.log(`播放默认音频 a.mp3 完成`)
+          },
+          onError: (error) => {
+            console.error('默认音频播放失败:', error)
+          }
+        })
+        return
+      }
+      
+      // 播放声调音频
+      pinyinAudioPlayer.play({
+        pinyin: letter,
+        tone: tone,
+        onComplete: () => {
+          console.log(`播放声调 ${combination} 完成`)
+        },
+        onError: (error) => {
+          console.error('播放失败:', error)
+        }
+      })
+    },
+    
+    // 字母积木动画
+    animateLetterBlock() {
+      try {
+        const query = uni.createSelectorQuery().in(this);
+        query.select('.main-char').boundingClientRect();
+        query.exec((res) => {
+          if (res && res[0]) {
+            const animation = uni.createAnimation({
+              duration: 200,
+              timingFunction: 'ease-in-out'
+            });
+            animation.scale(0.95).step();
+            animation.scale(1).step();
+            this.animationData = animation.export();
+          }
+        });
       } catch (e) {
-        console.error('加载进度失败', e);
+        console.error('animateLetterBlock 错误:', e);
       }
     },
     loadCurrentItemProgress() {
@@ -672,6 +961,21 @@ export default {
         console.error('保存进度失败', e);
       }
     },
+    
+    // 下一个
+    goNext() {
+      if (!this.isLastItem) {
+        this.saveProgress();
+        
+        // 自动进入下一个
+        setTimeout(() => {
+          this.currentIndex++;
+          this.assessment = '';
+          this.showDetails = false;
+          this.loadCurrentItemProgress();
+        }, 1000);
+      }
+    },
     unlockNextItem(progress) {
       // 如果当前项已标记为学习中或已掌握，则解锁下一项
       if (this.assessment === 'learning' || this.assessment === 'mastered') {
@@ -704,6 +1008,91 @@ export default {
           }
         }
       }
+    },
+    
+    // 下一个声调
+    nextTone() {
+      console.log('nextTone 被调用，当前声调索引:', this.currentToneIndex);
+      
+      if (this.currentToneIndex < this.tones.length - 1) {
+        // 还有下一个声调
+        this.currentToneIndex++;
+        console.log('进入下一个声调，索引:', this.currentToneIndex);
+        
+        // 播放当前声调音频
+        this.playToneAudio(this.currentItem.name, this.currentToneIndex + 1);
+      } else {
+        // 所有声调学习完成，进入组词练习
+        console.log('声调学习完成，进入组词练习');
+        this.learningStage = 'words';
+        this.currentWordIndex = 0;
+        
+        // 播放第一个词语音频
+        this.playWordAudio(this.currentWordData);
+      }
+    },
+    
+    // 跳过声调学习
+    skipTone() {
+      console.log('skipTone 被调用，跳过声调学习');
+      this.learningStage = 'words';
+      this.currentWordIndex = 0;
+    },
+    
+    // 下一个词语
+    nextWord() {
+      console.log('nextWord 被调用，当前词语索引:', this.currentWordIndex);
+      
+      const words = this.currentItem.examples || [];
+      
+      if (this.currentWordIndex < words.length - 1) {
+        // 还有下一个词语
+        this.currentWordIndex++;
+        console.log('进入下一个词语，索引:', this.currentWordIndex);
+        
+        // 播放当前词语音频
+        this.playWordAudio(this.currentWordData);
+      } else {
+        // 所有词语学习完成，进入下一个字母
+        console.log('组词练习完成，进入下一个字母');
+        this.goNextLetter();
+      }
+    },
+    
+    // 跳过组词练习
+    skipWord() {
+      console.log('skipWord 被调用，跳过组词练习');
+      this.goNextLetter();
+    },
+    
+    // 进入下一个字母
+    goNextLetter() {
+      console.log('goNextLetter 被调用，当前索引:', this.currentIndex);
+      
+      if (!this.isLastItem) {
+        // 保存当前字母的进度
+        this.assessment = 'mastered';
+        this.saveProgress();
+        
+        // 延迟后进入下一个字母
+        setTimeout(() => {
+          this.currentIndex++;
+          this.assessment = '';
+          this.showDetails = false;
+          this.learningStage = 'initial';
+          this.currentToneIndex = 0;
+          this.currentWordIndex = 0;
+          this.loadCurrentItemProgress();
+          console.log('已进入下一个字母，新索引:', this.currentIndex);
+        }, 500);
+      } else {
+        // 所有字母学习完成
+        console.log('所有字母学习完成');
+        uni.showToast({
+          title: '恭喜完成所有学习！',
+          icon: 'success'
+        });
+      }
     }
   }
 };
@@ -716,7 +1105,7 @@ export default {
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* 不同类型的背景色 */
@@ -856,7 +1245,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   margin-bottom: 40rpx;
   transition: all 0.3s ease;
@@ -906,10 +1295,12 @@ export default {
   box-shadow: 0 4rpx 0 rgba(0, 0, 0, 0.2);
 }
 
-/* 学习内容展示区 */
-.content-display {
+/* 字母展示区 */
+.letter-display {
+  width: 100%;
+  display: flex;
+  justify-content: center;
   margin-bottom: 40rpx;
-  text-align: center;
 }
 
 .main-char {
@@ -921,15 +1312,24 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20rpx;
-  box-shadow: 0 12rpx 0 rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 12rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.main-char:hover {
+  transform: translateY(-8rpx);
+  box-shadow: 0 16rpx 0 rgba(0, 0, 0, 0.15);
 }
 
 .main-char:active {
-  transform: scale(0.95);
-  box-shadow: 0 6rpx 0 rgba(0, 0, 0, 0.1);
+  transform: translateY(4rpx) scale(0.95);
+  box-shadow: 0 4rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.main-char.playing {
+  border-color: #FFD700;
+  box-shadow: 0 0 0 8rpx rgba(255, 215, 0, 0.3);
 }
 
 .char-text {
@@ -1171,5 +1571,351 @@ export default {
 
 .nav-text {
   font-weight: bold;
+}
+
+/* 组词练习区 */
+.groups-display {
+  width: 100%;
+  margin-bottom: 40rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.groups-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  justify-content: center;
+}
+
+.letter-group {
+  background: #FFFFFF;
+  border: 4rpx solid #FFFFFF;
+  border-radius: 20rpx;
+  padding: 16rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.letter-group:active {
+  transform: scale(0.95);
+  box-shadow: 0 4rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.group-text {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.group-audio {
+  font-size: 32rpx;
+  cursor: pointer;
+}
+
+.group-audio:active {
+  transform: scale(0.9);
+}
+
+/* 声调学习区 */
+.tones-display {
+  width: 100%;
+  margin-bottom: 40rpx;
+}
+
+.tones-container {
+  display: flex;
+  gap: 20rpx;
+  justify-content: center;
+}
+
+.tone-item {
+  background: #FFFFFF;
+  border: 4rpx solid #FFFFFF;
+  border-radius: 20rpx;
+  padding: 16rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.tone-item.active {
+  background: #FF476F;
+  border: 4rpx solid #FF476F;
+  box-shadow: 0 8rpx 0 #E53E5F;
+}
+
+.tone-item.active .tone-symbol,
+.tone-item.active .tone-name {
+  color: #FFFFFF;
+}
+
+.tone-symbol {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.tone-name {
+  font-size: 24rpx;
+  color: #333333;
+}
+
+/* 阶段标题 */
+.stage-title {
+  width: 100%;
+  margin-bottom: 40rpx;
+}
+
+.stage-text {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  text-align: center;
+  text-shadow: 2rpx 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 声调学习区 */
+.tone-learning-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32rpx;
+  animation: slide-up 0.4s ease;
+}
+
+.current-tone-display {
+  background: #FFFFFF;
+  border: 8rpx solid #FFFFFF;
+  border-radius: 32rpx;
+  padding: 48rpx 64rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  box-shadow: 0 12rpx 0 rgba(0, 0, 0, 0.1);
+  animation: pop-in 0.3s ease;
+}
+
+.tone-char {
+  font-size: 120rpx;
+  font-weight: bold;
+  color: #333333;
+  line-height: 1;
+}
+
+.tone-char-container {
+  position: relative;
+  display: inline-block;
+  height: 140rpx;
+  width: 120rpx;
+}
+
+.tone-symbol {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 60rpx;
+  font-weight: bold;
+  color: #FF6B6B;
+  line-height: 1;
+  z-index: 1;
+}
+
+.tone-letter {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 120rpx;
+  font-weight: bold;
+  color: #333333;
+  line-height: 1;
+}
+
+.tone-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #666666;
+}
+
+.tone-progress {
+  display: flex;
+  gap: 16rpx;
+  align-items: center;
+}
+
+.tone-progress-item {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 12rpx;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.tone-progress-item.active {
+  background: #FFFFFF;
+  box-shadow: 0 6rpx 0 rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+
+.tone-progress-item.completed {
+  background: #4CAF50;
+  box-shadow: 0 6rpx 0 #388E3C;
+}
+
+.tone-actions {
+  display: flex;
+  gap: 24rpx;
+  width: 100%;
+  justify-content: center;
+}
+
+/* 组词练习区 */
+.word-learning-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32rpx;
+  animation: slide-up 0.4s ease;
+}
+
+.current-word-display {
+  background: #FFFFFF;
+  border: 8rpx solid #FFFFFF;
+  border-radius: 32rpx;
+  padding: 48rpx 64rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  box-shadow: 0 12rpx 0 rgba(0, 0, 0, 0.1);
+  animation: pop-in 0.3s ease;
+}
+
+.word-text {
+  font-size: 80rpx;
+  font-weight: bold;
+  color: #333333;
+  line-height: 1;
+}
+
+.word-pinyin {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #666666;
+}
+
+.word-progress {
+  display: flex;
+  gap: 16rpx;
+  align-items: center;
+}
+
+.word-progress-item {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 12rpx;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.word-progress-item.active {
+  background: #FFFFFF;
+  box-shadow: 0 6rpx 0 rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+
+.word-progress-item.completed {
+  background: #4CAF50;
+  box-shadow: 0 6rpx 0 #388E3C;
+}
+
+.word-actions {
+  display: flex;
+  gap: 24rpx;
+  width: 100%;
+  justify-content: center;
+}
+
+/* 积木风格按钮 */
+.block-btn {
+  background: #FFFFFF;
+  border: 6rpx solid #FFFFFF;
+  border-radius: 24rpx;
+  padding: 24rpx 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8rpx 0 rgba(0, 0, 0, 0.1);
+  min-width: 160rpx;
+}
+
+.block-btn:active {
+  transform: translateY(4rpx) scale(0.95);
+  box-shadow: 0 4rpx 0 rgba(0, 0, 0, 0.1);
+}
+
+.skip-btn {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.next-btn {
+  background: #4CAF50;
+  border-color: #4CAF50;
+}
+
+.next-btn .btn-text {
+  color: #FFFFFF;
+}
+
+.btn-text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+/* 动画效果 */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(40rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>

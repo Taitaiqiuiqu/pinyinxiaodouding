@@ -1,5 +1,5 @@
 {
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+	"pages": [
 		{
 			"path": "pages/login/index",
 			"style": {
@@ -64,6 +64,12 @@
 		"path": "pages/phonics/pronunciation/study",
 		"style": {
 			"navigationBarTitleText": "学习"
+		}
+	},
+	{
+		"path": "pages/admin/audio-sync",
+		"style": {
+			"navigationBarTitleText": "音频同步"
 		}
 	}
 	],
