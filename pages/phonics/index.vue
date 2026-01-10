@@ -24,7 +24,7 @@
         </view>
         
         <!-- 拼音儿歌模块 -->
-        <view class="module-card card-secondary">
+        <view class="module-card card-secondary" @click="goToSongs">
           <view class="card-content">
             <text class="card-icon">🎵</text>
             <text class="card-title">拼音儿歌</text>
@@ -48,6 +48,11 @@ export default {
     goToPronunciation() {
       uni.navigateTo({
         url: '/pages/phonics/pronunciation/index'
+      });
+    },
+    goToSongs() {
+      uni.navigateTo({
+        url: '/pages/songs/index'
       });
     }
   }

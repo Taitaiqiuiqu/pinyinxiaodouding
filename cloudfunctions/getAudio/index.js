@@ -64,6 +64,17 @@ exports.main = async (event, context) => {
         fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/home/guide_home_write.wav',
         fileName: 'guide_home_write.wav',
         audioType: 'guide'
+      },
+      // 儿歌音频
+      'speak_song': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/songs/speak_song.MP3',
+        fileName: 'speak_song.MP3',
+        audioType: 'songs'
+      },
+      'study_songs': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/songs/study_songs.MP3',
+        fileName: 'study_songs.MP3',
+        audioType: 'songs'
       }
     }
     

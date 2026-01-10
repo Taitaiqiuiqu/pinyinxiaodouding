@@ -71,6 +71,12 @@
 		"style": {
 			"navigationBarTitleText": "音频同步"
 		}
+	},
+	{
+		"path": "pages/songs/index",
+		"style": {
+			"navigationBarTitleText": "拼音儿歌"
+		}
 	}
 	],
 	"globalStyle": {
