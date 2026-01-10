@@ -1,5 +1,7 @@
 <template>
   <view class="phonics-page">
+    <!-- 悬浮小球组件 -->
+    <FloatingBall />
     <!-- 积木风格装饰元素 -->
     <view class="decoration-block decoration-1"></view>
     <view class="decoration-block decoration-2"></view>
@@ -42,8 +44,13 @@
 </template>
 
 <script>
+import FloatingBall from '../../src/components/FloatingBall/FloatingBall.vue';
+
 export default {
   name: 'PhonicsPage',
+  components: {
+    FloatingBall
+  },
   methods: {
     goToPronunciation() {
       uni.navigateTo({

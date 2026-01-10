@@ -1,6 +1,5 @@
 <template>
   <view class="app-container">
-    <!-- 页面容器 -->
     <slot></slot>
   </view>
 </template>
@@ -8,10 +7,16 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 import { initCloud } from './src/services/cloud'
+import FloatingBall from './src/components/FloatingBall/FloatingBall.vue'
+import { useGlobalStore } from './src/store/global'
+import { watch } from 'vue'
+import GlobalAudioManager from './src/services/GlobalAudioManager'
+
+const globalStore = useGlobalStore()
+const audioManager = GlobalAudioManager.getInstance()
 
 onLaunch(() => {
   console.log('App Launch')
-  // 初始化云开发环境
   initCloud().then(() => {
     console.log('Cloud initialized successfully')
   }).catch(err => {
@@ -25,6 +30,14 @@ onShow(() => {
 
 onHide(() => {
   console.log('App Hide')
+})
+
+watch(() => globalStore.songPlaying, (newVal) => {
+  if (newVal) {
+    audioManager.resumeSong()
+  } else {
+    audioManager.pauseSong()
+  }
 })
 </script>
 

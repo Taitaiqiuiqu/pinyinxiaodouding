@@ -80,7 +80,11 @@ export const useGlobalStore = defineStore('global', {
     unlockedByParent: loadBoolean(STORAGE_KEYS.unlockedByParent, false) as boolean,
     currentLevel: loadString(STORAGE_KEYS.currentLevel, '') as string,
     userInfo: loadFromStorage(STORAGE_KEYS.userInfo, null) as any,
-    openid: loadString(STORAGE_KEYS.openid, '') as string
+    openid: loadString(STORAGE_KEYS.openid, '') as string,
+    songPlaying: false as boolean,
+    currentSongIndex: -1 as number,
+    currentSongTitle: '' as string,
+    showFloatingBall: false as boolean
   }),
   getters: {
     ageGroup: (state) => {
@@ -130,6 +134,10 @@ export const useGlobalStore = defineStore('global', {
       this.currentLevel = ''
       this.userInfo = null
       this.openid = ''
+      this.songPlaying = false
+      this.currentSongIndex = -1
+      this.currentSongTitle = ''
+      this.showFloatingBall = false
       
       uni.removeStorageSync(STORAGE_KEYS.ageLevel)
       uni.removeStorageSync(STORAGE_KEYS.maxUsageTime)
@@ -139,6 +147,18 @@ export const useGlobalStore = defineStore('global', {
       uni.removeStorageSync(STORAGE_KEYS.userInfo)
       uni.removeStorageSync(STORAGE_KEYS.openid)
       uni.removeStorageSync('isLoggedIn')
+    },
+    setSongPlaying(playing: boolean) {
+      this.songPlaying = playing
+    },
+    setCurrentSongIndex(index: number) {
+      this.currentSongIndex = index
+    },
+    setCurrentSongTitle(title: string) {
+      this.currentSongTitle = title
+    },
+    setShowFloatingBall(show: boolean) {
+      this.showFloatingBall = show
     }
   }
 })

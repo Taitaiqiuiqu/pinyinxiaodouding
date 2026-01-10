@@ -7,33 +7,44 @@ import GlobalAudioManager from '../../services/GlobalAudioManager'
 
 const audioManager = GlobalAudioManager.getInstance()
 
-/**
- * 播放音频方法
- * @param params 音频参数
- */
 const play = (params: { type: string; file: string; loop?: boolean; onComplete?: () => void }) => {
   const { type, file, loop = false, onComplete } = params
   
   if (loop) {
     audioManager.startLoop(file, type)
   } else {
-    // 直接将onComplete回调传递给playOnce方法，由GlobalAudioManager在音频真正结束时调用
     audioManager.playOnce(file, type, onComplete)
   }
 }
 
-/**
- * 停止音频播放方法
- */
+const playSong = (params: { type: string; file: string; onComplete?: () => void }) => {
+  const { type, file, onComplete } = params
+  audioManager.playSong(file, type, onComplete)
+}
+
+const pauseSong = () => {
+  audioManager.pauseSong()
+}
+
+const resumeSong = () => {
+  audioManager.resumeSong()
+}
+
+const stopSong = () => {
+  audioManager.stopSong()
+}
+
 const stop = () => {
-  // 停止循环播放
   audioManager.stopLoop()
-  // 由于GlobalAudioManager没有提供停止单次播放的方法，这里可以考虑扩展
   console.log('[AudioPlayer] 音频已停止')
 }
 
 defineExpose({
   play,
+  playSong,
+  pauseSong,
+  resumeSong,
+  stopSong,
   stop
 })
 </script>

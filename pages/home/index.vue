@@ -2,6 +2,8 @@
   <view class="home-page">
     <!-- 音频播放器组件 -->
     <AudioPlayer ref="audioPlayer" />
+    <!-- 悬浮小球组件 -->
+    <FloatingBall />
     <!-- 页面顶部 -->
     <view class="header">
       <text class="page-title">拼音学习乐园</text>
@@ -96,6 +98,7 @@ import { useGlobalStore } from '../../src/store/global';
 import HandGuide from '../../src/components/HandGuide/HandGuide.vue';
 import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue';
 import RoleGuide from '../../src/components/RoleGuide/RoleGuide.vue';
+import FloatingBall from '../../src/components/FloatingBall/FloatingBall.vue';
 
 // 全局状态管理
 const globalStore = useGlobalStore();

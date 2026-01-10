@@ -1,6 +1,7 @@
 <template>
   <view class="songs-page">
     <AudioPlayer ref="audioPlayer" />
+    <FloatingBall />
     
     <view class="decoration-block decoration-1"></view>
     <view class="decoration-block decoration-2"></view>
@@ -43,9 +44,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { onShow, onHide } from '@dcloudio/uni-app';
 import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue';
+import { useGlobalStore } from '../../src/store/global';
+import FloatingBall from '../../src/components/FloatingBall/FloatingBall.vue';
 
 const audioPlayer = ref<InstanceType<typeof AudioPlayer>>();
+const globalStore = useGlobalStore();
 const currentSongIndex = ref(-1);
 const isPlaying = ref(false);
 
@@ -68,31 +73,50 @@ const playSong = (index: number) => {
     return;
   }
   
-  audioPlayer.value?.stop();
+  audioPlayer.value?.stopSong();
   currentSongIndex.value = index;
   isPlaying.value = true;
   
   const song = songs[index];
-  audioPlayer.value?.play({
+  globalStore.setCurrentSongIndex(index);
+  globalStore.setCurrentSongTitle(song.title);
+  globalStore.setSongPlaying(true);
+  globalStore.setShowFloatingBall(true);
+  
+  audioPlayer.value?.playSong({
     type: 'songs',
     file: song.audio,
-    loop: false,
     onComplete: () => {
       isPlaying.value = false;
+      globalStore.setSongPlaying(false);
+      globalStore.setShowFloatingBall(false);
     }
   });
 };
 
 const stopSong = () => {
-  audioPlayer.value?.stop();
+  audioPlayer.value?.stopSong();
   isPlaying.value = false;
   currentSongIndex.value = -1;
+  globalStore.setSongPlaying(false);
+  globalStore.setCurrentSongIndex(-1);
+  globalStore.setCurrentSongTitle('');
+  globalStore.setShowFloatingBall(false);
 };
 
 const goBack = () => {
-  audioPlayer.value?.stop();
   uni.navigateBack();
 };
+
+onShow(() => {
+  if (globalStore.currentSongIndex !== -1) {
+    currentSongIndex.value = globalStore.currentSongIndex;
+    isPlaying.value = globalStore.songPlaying;
+  }
+});
+
+onHide(() => {
+});
 </script>
 
 <style scoped>

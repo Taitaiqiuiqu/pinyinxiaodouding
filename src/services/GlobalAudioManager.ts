@@ -7,7 +7,10 @@ class GlobalAudioManager {
   private currentAudioFile: string = ''
   private audioType: string = ''
   private onCompleteCallback: (() => void) | null = null
-  private audioCache: Map<string, string> = new Map() // 音频URL缓存
+  private audioCache: Map<string, string> = new Map()
+  private songPaused: boolean = false
+  private currentSongFile: string = ''
+  private currentSongType: string = '' // 音频URL缓存
 
   private constructor() {
     this.init()
@@ -153,10 +156,55 @@ class GlobalAudioManager {
     console.log('[GlobalAudioManager] playOnce called with:', audioFile, audioType)
     this.currentAudioFile = audioFile
     this.audioType = audioType
-    // 单次播放不需要设置isPlaying为true（因为isPlaying用于控制循环播放）
     this.isPlaying = false
     this.onCompleteCallback = onComplete || null
     this.playAudio()
+  }
+
+  playSong(audioFile: string, audioType: string = 'songs', onComplete?: () => void) {
+    console.log('[GlobalAudioManager] playSong called with:', audioFile, audioType)
+    this.currentSongFile = audioFile
+    this.currentSongType = audioType
+    this.songPaused = false
+    this.currentAudioFile = audioFile
+    this.audioType = audioType
+    this.isPlaying = false
+    this.onCompleteCallback = onComplete || null
+    this.playAudio()
+  }
+
+  pauseSong() {
+    if (this.ctx && this.currentSongFile) {
+      console.log('[GlobalAudioManager] 暂停儿歌播放')
+      this.ctx.pause()
+      this.songPaused = true
+    }
+  }
+
+  resumeSong() {
+    if (this.ctx && this.songPaused && this.currentSongFile) {
+      console.log('[GlobalAudioManager] 恢复儿歌播放')
+      this.ctx.play()
+      this.songPaused = false
+    }
+  }
+
+  stopSong() {
+    if (this.ctx) {
+      console.log('[GlobalAudioManager] 停止儿歌播放')
+      this.ctx.stop()
+      this.songPaused = false
+      this.currentSongFile = ''
+      this.currentSongType = ''
+    }
+  }
+
+  isSongPlaying(): boolean {
+    return this.currentSongFile !== '' && !this.songPaused
+  }
+
+  isSongPaused(): boolean {
+    return this.songPaused
   }
 
   private onEnded() {
