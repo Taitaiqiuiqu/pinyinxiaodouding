@@ -36,6 +36,28 @@ const visible = computed(() => {
 
 const isPlaying = computed(() => globalStore.songPlaying)
 
+const ballPosition = computed({
+  get: () => globalStore.ballPosition,
+  set: (value) => globalStore.setBallPosition(value)
+})
+
+const isDocked = computed({
+  get: () => globalStore.isDocked,
+  set: (value) => globalStore.setIsDocked(value)
+})
+
+const isHalfVisible = computed({
+  get: () => globalStore.isHalfVisible,
+  set: (value) => globalStore.setIsHalfVisible(value)
+})
+
+const isDragging = ref(false)
+const dockTimer = ref<number | null>(null)
+const hasMoved = ref(false)
+const isPressed = ref(false)
+const screenWidth = ref(375)
+const screenHeight = ref(667)
+
 watch(() => globalStore.showFloatingBall, (newVal) => {
   console.log('[FloatingBall] showFloatingBall changed:', newVal)
 })
@@ -43,16 +65,6 @@ watch(() => globalStore.showFloatingBall, (newVal) => {
 watch(() => globalStore.songPlaying, (newVal) => {
   console.log('[FloatingBall] songPlaying changed:', newVal)
 })
-
-const ballPosition = ref({ x: 0, y: 0 })
-const isDragging = ref(false)
-const isDocked = ref(false)
-const isHalfVisible = ref(false)
-const dockTimer = ref<number | null>(null)
-const hasMoved = ref(false)
-const isPressed = ref(false)
-const screenWidth = ref(375)
-const screenHeight = ref(667)
 
 const ballSize = computed(() => {
   return Math.floor(screenWidth.value * 0.175)
@@ -234,11 +246,25 @@ onMounted(() => {
     iconSize: iconSize.value
   })
   
+  console.log('[FloatingBall] Saved position from store:', globalStore.ballPosition)
+  
   const safeArea = 20
   
-  ballPosition.value = {
-    x: screenWidth.value - ballSize.value - safeArea,
-    y: screenHeight.value - ballSize.value - 150
+  if (globalStore.ballPosition.x === 0 && globalStore.ballPosition.y === 0) {
+    console.log('[FloatingBall] No saved position, using default')
+    ballPosition.value = {
+      x: screenWidth.value - ballSize.value - safeArea,
+      y: screenHeight.value - ballSize.value - 150
+    }
+  } else {
+    console.log('[FloatingBall] Using saved position')
+    const maxX = screenWidth.value - ballSize.value - safeArea
+    const maxY = screenHeight.value - ballSize.value - safeArea
+    
+    ballPosition.value = {
+      x: Math.max(safeArea, Math.min(globalStore.ballPosition.x, maxX)),
+      y: Math.max(safeArea, Math.min(globalStore.ballPosition.y, maxY))
+    }
   }
   
   console.log('[FloatingBall] Initial position:', ballPosition.value)

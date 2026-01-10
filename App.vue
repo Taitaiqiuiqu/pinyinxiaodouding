@@ -7,9 +7,7 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 import { initCloud } from './src/services/cloud'
-import FloatingBall from './src/components/FloatingBall/FloatingBall.vue'
 import { useGlobalStore } from './src/store/global'
-import { watch } from 'vue'
 import GlobalAudioManager from './src/services/GlobalAudioManager'
 
 const globalStore = useGlobalStore()
@@ -22,6 +20,10 @@ onLaunch(() => {
   }).catch(err => {
     console.error('Cloud initialization failed:', err)
   })
+  
+  audioManager.setStateChangeCallback((isPlaying: boolean) => {
+    globalStore.setSongPlaying(isPlaying)
+  })
 })
 
 onShow(() => {
@@ -30,14 +32,6 @@ onShow(() => {
 
 onHide(() => {
   console.log('App Hide')
-})
-
-watch(() => globalStore.songPlaying, (newVal) => {
-  if (newVal) {
-    audioManager.resumeSong()
-  } else {
-    audioManager.pauseSong()
-  }
 })
 </script>
 

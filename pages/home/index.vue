@@ -23,7 +23,7 @@
         </view>
 
         <!-- 游戏训练卡片 -->
-        <view id="card2" class="module-card card-secondary" @tap="showComingSoon('游戏训练')" ref="card2">
+        <view id="card2" class="module-card card-secondary" @tap="navigateTo('/pages/games/index')" ref="card2">
           <view class="card-content">
             <Icon name="game" size="100rpx" color="#FFFFFF" />
             <text class="card-title">游戏训练</text>

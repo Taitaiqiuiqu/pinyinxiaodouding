@@ -7,7 +7,10 @@ const STORAGE_KEYS = {
   unlockedByParent: 'unlockedByParent',
   currentLevel: 'currentLevel',
   userInfo: 'userInfo',
-  openid: 'openid'
+  openid: 'openid',
+  ballPosition: 'ballPosition',
+  isDocked: 'isDocked',
+  isHalfVisible: 'isHalfVisible'
 }
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
@@ -84,7 +87,10 @@ export const useGlobalStore = defineStore('global', {
     songPlaying: false as boolean,
     currentSongIndex: -1 as number,
     currentSongTitle: '' as string,
-    showFloatingBall: false as boolean
+    showFloatingBall: false as boolean,
+    ballPosition: loadFromStorage(STORAGE_KEYS.ballPosition, { x: 0, y: 0 }) as {x: number, y: number},
+    isDocked: loadBoolean(STORAGE_KEYS.isDocked, false) as boolean,
+    isHalfVisible: loadBoolean(STORAGE_KEYS.isHalfVisible, false) as boolean
   }),
   getters: {
     ageGroup: (state) => {
@@ -138,6 +144,9 @@ export const useGlobalStore = defineStore('global', {
       this.currentSongIndex = -1
       this.currentSongTitle = ''
       this.showFloatingBall = false
+      this.ballPosition = { x: 0, y: 0 }
+      this.isDocked = false
+      this.isHalfVisible = false
       
       uni.removeStorageSync(STORAGE_KEYS.ageLevel)
       uni.removeStorageSync(STORAGE_KEYS.maxUsageTime)
@@ -147,6 +156,9 @@ export const useGlobalStore = defineStore('global', {
       uni.removeStorageSync(STORAGE_KEYS.userInfo)
       uni.removeStorageSync(STORAGE_KEYS.openid)
       uni.removeStorageSync('isLoggedIn')
+      uni.removeStorageSync(STORAGE_KEYS.ballPosition)
+      uni.removeStorageSync(STORAGE_KEYS.isDocked)
+      uni.removeStorageSync(STORAGE_KEYS.isHalfVisible)
     },
     setSongPlaying(playing: boolean) {
       this.songPlaying = playing
@@ -159,6 +171,18 @@ export const useGlobalStore = defineStore('global', {
     },
     setShowFloatingBall(show: boolean) {
       this.showFloatingBall = show
+    },
+    setBallPosition(position: {x: number, y: number}) {
+      this.ballPosition = position
+      uni.setStorageSync(STORAGE_KEYS.ballPosition, JSON.stringify(position))
+    },
+    setIsDocked(docked: boolean) {
+      this.isDocked = docked
+      uni.setStorageSync(STORAGE_KEYS.isDocked, docked)
+    },
+    setIsHalfVisible(halfVisible: boolean) {
+      this.isHalfVisible = halfVisible
+      uni.setStorageSync(STORAGE_KEYS.isHalfVisible, halfVisible)
     }
   }
 })

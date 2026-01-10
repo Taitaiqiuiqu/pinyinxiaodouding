@@ -10,7 +10,8 @@ class GlobalAudioManager {
   private audioCache: Map<string, string> = new Map()
   private songPaused: boolean = false
   private currentSongFile: string = ''
-  private currentSongType: string = '' // 音频URL缓存
+  private currentSongType: string = ''
+  private onStateChangeCallback: ((isPlaying: boolean) => void) | null = null
 
   private constructor() {
     this.init()
@@ -170,6 +171,7 @@ class GlobalAudioManager {
     this.audioType = audioType
     this.isPlaying = false
     this.onCompleteCallback = onComplete || null
+    this.notifyStateChange(true)
     this.playAudio()
   }
 
@@ -178,6 +180,7 @@ class GlobalAudioManager {
       console.log('[GlobalAudioManager] 暂停儿歌播放')
       this.ctx.pause()
       this.songPaused = true
+      this.notifyStateChange(false)
     }
   }
 
@@ -186,6 +189,7 @@ class GlobalAudioManager {
       console.log('[GlobalAudioManager] 恢复儿歌播放')
       this.ctx.play()
       this.songPaused = false
+      this.notifyStateChange(true)
     }
   }
 
@@ -196,6 +200,7 @@ class GlobalAudioManager {
       this.songPaused = false
       this.currentSongFile = ''
       this.currentSongType = ''
+      this.notifyStateChange(false)
     }
   }
 
@@ -205,6 +210,16 @@ class GlobalAudioManager {
 
   isSongPaused(): boolean {
     return this.songPaused
+  }
+
+  setStateChangeCallback(callback: (isPlaying: boolean) => void) {
+    this.onStateChangeCallback = callback
+  }
+
+  private notifyStateChange(isPlaying: boolean) {
+    if (this.onStateChangeCallback) {
+      this.onStateChangeCallback(isPlaying)
+    }
   }
 
   private onEnded() {

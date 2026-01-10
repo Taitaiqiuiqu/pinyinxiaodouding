@@ -77,6 +77,18 @@
 		"style": {
 			"navigationBarTitleText": "拼音儿歌"
 		}
+	},
+	{
+		"path": "pages/games/listen-guess/index",
+		"style": {
+			"navigationBarTitleText": "听音辨音"
+		}
+	},
+	{
+		"path": "pages/games/index",
+		"style": {
+			"navigationBarTitleText": "游戏训练"
+		}
 	}
 	],
 	"globalStyle": {
