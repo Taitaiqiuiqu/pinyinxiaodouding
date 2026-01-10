@@ -1,4 +1,4 @@
-import { getPinyinAudioFileID, getPinyinAllTonesFileIDs, PinyinAudioOptions } from './pinyinAudio'
+import { getPinyinAudioFileID, getPinyinAllTonesFileIDs } from './pinyinAudio'
 
 export interface PlayOptions {
   pinyin: string
@@ -116,43 +116,6 @@ export class PinyinAudioPlayer {
     }
     
     onComplete?.()
-  }
-
-  private async playLocalAudio(localPath: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.isPlaying && this.currentAudio) {
-        this.currentAudio.stop()
-      }
-      
-      this.currentAudio = uni.createInnerAudioContext()
-      this.currentAudio.src = localPath
-      
-      console.log('准备播放本地音频:', localPath)
-      
-      this.currentAudio.onCanplay(() => {
-        console.log('音频准备就绪，开始播放')
-        this.isPlaying = true
-        this.currentAudio?.play()
-      })
-      
-      this.currentAudio.onEnded(() => {
-        console.log('音频播放完成')
-        this.isPlaying = false
-        this.cleanup()
-        resolve()
-      })
-      
-      this.currentAudio.onError((error) => {
-        console.error('播放本地音频失败:', error)
-        this.isPlaying = false
-        this.cleanup()
-        reject(error)
-      })
-      
-      this.currentAudio.onPlay(() => {
-        console.log('音频开始播放')
-      })
-    })
   }
 
   async playSequence(options: PlaySequenceOptions): Promise<void> {

@@ -122,44 +122,51 @@ onHide(() => {
 <style scoped>
 .songs-page {
   min-height: 100vh;
-  background: #FF476F;
+  background: #FFB84D;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
 }
 
-.decoration-block {
+/* 积木风格装饰元素 */
+.songs-page::before {
+  content: '';
   position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  width: 140rpx;
+  height: 140rpx;
+  background: #FF476F;
   border-radius: 24rpx;
-  z-index: 0;
-}
-
-.decoration-1 {
-  top: 20rpx;
-  right: 20rpx;
-  width: 160rpx;
-  height: 160rpx;
-  background: #FBBF24;
   transform: rotate(15deg);
+  z-index: 0;
   animation: float-left 8s ease-in-out infinite reverse;
+  box-shadow: 0 12rpx 0 #E53E5F;
 }
 
-.decoration-2 {
-  bottom: 100rpx;
-  left: 30rpx;
+.songs-page::after {
+  content: '';
+  position: absolute;
+  bottom: 60rpx;
+  left: 60rpx;
   width: 100rpx;
   height: 100rpx;
   background: #3B82F6;
-  transform: rotate(-8deg);
+  border-radius: 24rpx;
+  transform: rotate(-10deg);
+  z-index: 0;
   animation: float 6s ease-in-out infinite;
+  box-shadow: 0 12rpx 0 #1D4ED8;
 }
 
+/* 浮动动画 */
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(-8deg); }
-  50% { transform: translateY(-20rpx) rotate(-12deg); }
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-20rpx) rotate(-15deg); }
 }
 
+/* 左上角装饰元素浮动动画 */
 @keyframes float-left {
   0%, 100% { transform: translateY(0) rotate(15deg); }
   50% { transform: translateY(-25rpx) rotate(20deg); }

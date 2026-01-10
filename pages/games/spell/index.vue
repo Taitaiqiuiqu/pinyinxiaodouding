@@ -1,16 +1,20 @@
 <template>
-  <view class="page listen-guess-page">
+  <view class="page spell-page">
     <view class="floating-stars"></view>
     <AudioPlayer ref="audio" />
 
     <view class="center-area card container">
-      <text class="title">听音辨音</text>
-      <text class="subtitle">听一听，选出正确的拼音</text>
+      <text class="title">拼音拼写</text>
+      <text class="subtitle">听一听，写出正确的拼音</text>
 
       <view class="game-area">
         <view class="score-row">
           <text class="score">得分：{{ score }}</text>
           <text class="question-num">第 {{ currentQuestion + 1 }} / {{ totalQuestions }} 题</text>
+        </view>
+
+        <view class="character-display">
+          <text class="character-text">{{ currentCharacter }}</text>
         </view>
 
         <view class="audio-section">
@@ -20,19 +24,22 @@
           </view>
         </view>
 
-        <view class="options-grid">
-          <view
-            v-for="(option, index) in currentOptions"
-            :key="index"
-            class="option-card"
-            :class="{
-              correct: showResult && option.isCorrect,
-              wrong: showResult && selectedOption === index && !option.isCorrect,
-              selected: selectedOption === index && !showResult
-            }"
-            @tap="selectOption(index)"
-          >
-            <text class="option-text">{{ option.pinyin }}</text>
+        <view class="input-section">
+          <view class="input-row">
+            <input
+              v-model="userInput"
+              class="pinyin-input"
+              placeholder="输入拼音"
+              @input="onInput"
+              :disabled="showResult"
+            />
+            <button class="submit-btn" @tap="submitAnswer" :disabled="showResult || !userInput.trim()">
+              提交
+            </button>
+          </view>
+          <view class="hint-text" v-if="showResult">
+            <text>正确答案：</text>
+            <text class="correct-answer">{{ correctPinyin }}</text>
           </view>
         </view>
 
@@ -69,70 +76,73 @@ import { playPinyinAudio } from '@/src/services/PinyinAudioPlayer'
 import { getPinyinAllTonesFileIDs } from '@/src/services/pinyinAudio'
 import AudioPlayer from '@/src/components/AudioPlayer/AudioPlayer.vue'
 
-interface PinyinOption {
+interface WordData {
+  character: string
   pinyin: string
   tone: 0 | 1 | 2 | 3 | 4
-  isCorrect: boolean
 }
 
 const audio = ref<any>(null)
 const score = ref(0)
 const currentQuestion = ref(0)
 const totalQuestions = ref(10)
-const currentOptions = ref<PinyinOption[]>([])
-const selectedOption = ref<number | null>(null)
+const currentCharacter = ref('')
+const correctPinyin = ref('')
+const correctTone = ref<0 | 1 | 2 | 3 | 4>(0)
+const userInput = ref('')
 const showResult = ref(false)
 const isCorrect = ref(false)
 const feedbackText = ref('')
 const isPlaying = ref(false)
 const showResultModal = ref(false)
 
-const pinyinList = [
-  'a', 'o', 'e', 'i', 'u', 'ü',
-  'b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h',
-  'j', 'q', 'x', 'zh', 'ch', 'sh', 'r', 'z', 'c', 's', 'y', 'w',
-  'ai', 'ei', 'ui', 'ao', 'ou', 'iu', 'ie', 'üe', 'er',
-  'an', 'en', 'in', 'un', 'ün',
-  'ang', 'eng', 'ing', 'ong',
-  'ba', 'pa', 'ma', 'fa', 'da', 'ta', 'na', 'la',
-  'ga', 'ka', 'ha', 'ja', 'qa', 'xa',
-  'zha', 'cha', 'sha', 'ra', 'za', 'ca', 'sa',
-  'bai', 'pai', 'mai', 'dai', 'tai', 'nai', 'lai',
-  'gai', 'kai', 'hai', 'zhai', 'chai', 'shai', 'zai', 'cai', 'sai',
-  'ban', 'pan', 'man', 'fan', 'dan', 'tan', 'nan', 'lan',
-  'gan', 'kan', 'han', 'zhan', 'chan', 'shan', 'ran', 'zan', 'can', 'san',
-  'bang', 'pang', 'mang', 'fang', 'dang', 'tang', 'nang', 'lang',
-  'gang', 'kang', 'hang', 'zhang', 'chang', 'shang', 'rang', 'zang', 'cang', 'sang',
-  'bei', 'pei', 'mei', 'fei',
-  'gei', 'kei', 'hei', 'zhei', 'chei', 'shei', 'zei',
-  'ben', 'pen', 'men', 'fen',
-  'gen', 'ken', 'hen', 'zhen', 'chen', 'shen', 'ren', 'zen', 'cen', 'sen',
-  'beng', 'peng', 'meng', 'feng',
-  'geng', 'keng', 'heng', 'zheng', 'cheng', 'sheng', 'reng', 'zeng', 'ceng', 'seng',
-  'bi', 'pi', 'mi', 'di', 'ti', 'ni', 'li',
-  'ji', 'qi', 'xi', 'zhi', 'chi', 'shi', 'ri', 'zi', 'ci', 'si',
-  'jia', 'qia', 'xia',
-  'bian', 'pian', 'mian', 'dian', 'tian', 'nian', 'lian',
-  'jian', 'qian', 'xian',
-  'biao', 'piao', 'miao', 'diao', 'tiao', 'niao', 'liao',
-  'jiao', 'qiao', 'xiao',
-  'bie', 'pie', 'mie', 'die', 'tie', 'nie', 'lie',
-  'jie', 'qie', 'xie',
-  'bin', 'pin', 'min',
-  'jin', 'qin', 'xin',
-  'bing', 'ping', 'ming', 'ding', 'ting', 'ning', 'ling',
-  'jing', 'qing', 'xing',
-  'bo', 'po', 'mo', 'fo',
-  'bu', 'pu', 'mu', 'fu', 'du', 'tu', 'nu', 'lu',
-  'gu', 'ku', 'hu', 'zhu', 'chu', 'shu', 'ru', 'zu', 'cu', 'su',
-  'duo', 'tuo', 'nuo', 'luo',
-  'guo', 'kuo', 'huo', 'zhuo', 'chuo', 'shuo', 'ruo', 'zuo', 'cuo', 'suo',
-  'dui', 'tui',
-  'gui', 'kui', 'hui', 'zhui', 'chui', 'shui', 'rui', 'zui', 'cui', 'sui',
-  'dun', 'tun',
-  'gun', 'kun', 'hun', 'zhun', 'chun', 'shun', 'run', 'zun', 'cun', 'sun',
-  'dong', 'tong', 'nong', 'long',
-  'gong', 'kong', 'hong', 'zhong', 'chong', 'rong', 'zong', 'cong', 'song'
+const wordList: WordData[] = [
+  { character: '爸', pinyin: 'ba', tone: 4 },
+  { character: '妈', pinyin: 'ma', tone: 1 },
+  { character: '我', pinyin: 'wo', tone: 3 },
+  { character: '你', pinyin: 'ni', tone: 3 },
+  { character: '他', pinyin: 'ta', tone: 1 },
+  { character: '好', pinyin: 'hao', tone: 3 },
+  { character: '大', pinyin: 'da', tone: 4 },
+  { character: '小', pinyin: 'xiao', tone: 3 },
+  { character: '人', pinyin: 'ren', tone: 2 },
+  { character: '口', pinyin: 'kou', tone: 3 },
+  { character: '手', pinyin: 'shou', tone: 3 },
+  { character: '目', pinyin: 'mu', tone: 4 },
+  { character: '耳', pinyin: 'er', tone: 3 },
+  { character: '日', pinyin: 'ri', tone: 4 },
+  { character: '月', pinyin: 'yue', tone: 4 },
+  { character: '水', pinyin: 'shui', tone: 3 },
+  { character: '火', pinyin: 'huo', tone: 3 },
+  { character: '山', pinyin: 'shan', tone: 1 },
+  { character: '石', pinyin: 'shi', tone: 2 },
+  { character: '田', pinyin: 'tian', tone: 2 },
+  { character: '土', pinyin: 'tu', tone: 3 },
+  { character: '木', pinyin: 'mu', tone: 4 },
+  { character: '天', pinyin: 'tian', tone: 1 },
+  { character: '地', pinyin: 'di', tone: 4 },
+  { character: '风', pinyin: 'feng', tone: 1 },
+  { character: '雨', pinyin: 'yu', tone: 3 },
+  { character: '云', pinyin: 'yun', tone: 2 },
+  { character: '花', pinyin: 'hua', tone: 1 },
+  { character: '草', pinyin: 'cao', tone: 3 },
+  { character: '树', pinyin: 'shu', tone: 4 },
+  { character: '鸟', pinyin: 'niao', tone: 3 },
+  { character: '鱼', pinyin: 'yu', tone: 2 },
+  { character: '马', pinyin: 'ma', tone: 3 },
+  { character: '牛', pinyin: 'niu', tone: 2 },
+  { character: '羊', pinyin: 'yang', tone: 2 },
+  { character: '狗', pinyin: 'gou', tone: 3 },
+  { character: '猫', pinyin: 'mao', tone: 1 },
+  { character: '书', pinyin: 'shu', tone: 1 },
+  { character: '笔', pinyin: 'bi', tone: 3 },
+  { character: '纸', pinyin: 'zhi', tone: 3 },
+  { character: '门', pinyin: 'men', tone: 2 },
+  { character: '窗', pinyin: 'chuang', tone: 1 },
+  { character: '桌', pinyin: 'zhuo', tone: 1 },
+  { character: '椅', pinyin: 'yi', tone: 3 },
+  { character: '床', pinyin: 'chuang', tone: 2 },
+  { character: '灯', pinyin: 'deng', tone: 1 }
 ]
 
 const isLastQuestion = computed(() => currentQuestion.value >= totalQuestions.value - 1)
@@ -146,81 +156,23 @@ onUnmounted(() => {
 })
 
 function generateQuestion() {
-  const correctPinyin = pinyinList[Math.floor(Math.random() * pinyinList.length)]
+  const randomIndex = Math.floor(Math.random() * wordList.length)
+  const word = wordList[randomIndex]
   
-  const allToneFileIDs = getPinyinAllTonesFileIDs(correctPinyin)
-  const availableTones: (0 | 1 | 2 | 3 | 4)[] = []
+  currentCharacter.value = word.character
+  correctPinyin.value = word.pinyin
+  correctTone.value = word.tone
   
-  allToneFileIDs.forEach((fileID, index) => {
-    if (fileID !== null) {
-      availableTones.push(index as 0 | 1 | 2 | 3 | 4)
-    }
-  })
-  
-  if (availableTones.length === 0) {
-    console.warn(`拼音 ${correctPinyin} 没有可用的声调音频，跳过`)
-    generateQuestion()
-    return
-  }
-  
-  const correctTone = availableTones[Math.floor(Math.random() * availableTones.length)] as 0 | 1 | 2 | 3 | 4
-
-  const options: PinyinOption[] = []
-  options.push({
-    pinyin: correctPinyin,
-    tone: correctTone,
-    isCorrect: true
-  })
-
-  const usedPinyins = new Set([correctPinyin])
-
-  while (options.length < 4) {
-    let randomPinyin
-    do {
-      randomPinyin = pinyinList[Math.floor(Math.random() * pinyinList.length)]
-    } while (usedPinyins.has(randomPinyin))
-
-    const randomToneFileIDs = getPinyinAllTonesFileIDs(randomPinyin)
-    const randomAvailableTones: (0 | 1 | 2 | 3 | 4)[] = []
-    
-    randomToneFileIDs.forEach((fileID, index) => {
-      if (fileID !== null) {
-        randomAvailableTones.push(index as 0 | 1 | 2 | 3 | 4)
-      }
-    })
-    
-    if (randomAvailableTones.length === 0) {
-      continue
-    }
-    
-    const randomTone = randomAvailableTones[Math.floor(Math.random() * randomAvailableTones.length)] as 0 | 1 | 2 | 3 | 4
-    options.push({
-      pinyin: randomPinyin,
-      tone: randomTone,
-      isCorrect: false
-    })
-    usedPinyins.add(randomPinyin)
-  }
-
-  for (let i = options.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[options[i], options[j]] = [options[j], options[i]]
-  }
-
-  currentOptions.value = options
-  selectedOption.value = null
+  userInput.value = ''
   showResult.value = false
 }
 
 async function playAudio() {
-  const correctOption = currentOptions.value.find(opt => opt.isCorrect)
-  if (!correctOption) return
-
   isPlaying.value = true
   try {
     await playPinyinAudio({
-      pinyin: correctOption.pinyin,
-      tone: correctOption.tone
+      pinyin: correctPinyin.value,
+      tone: correctTone.value
     })
   } catch (error) {
     console.error('播放音频失败:', error)
@@ -229,19 +181,23 @@ async function playAudio() {
   }
 }
 
-function selectOption(index: number) {
+function onInput(e: any) {
+  userInput.value = e.detail.value.toLowerCase()
+}
+
+function submitAnswer() {
   if (showResult.value) return
 
-  selectedOption.value = index
-  const selected = currentOptions.value[index]
-  isCorrect.value = selected.isCorrect
+  const input = userInput.value.trim().toLowerCase()
+  if (!input) return
+
+  isCorrect.value = input === correctPinyin.value.toLowerCase()
 
   if (isCorrect.value) {
     score.value += 10
     feedbackText.value = '回答正确！'
   } else {
-    const correctOption = currentOptions.value.find(opt => opt.isCorrect)
-    feedbackText.value = `回答错误，正确答案是 ${correctOption?.pinyin}`
+    feedbackText.value = '回答错误，请查看正确答案'
   }
 
   showResult.value = true
@@ -287,9 +243,9 @@ function stopAudio() {
 </script>
 
 <style scoped>
-.page.listen-guess-page {
+.page.spell-page {
   padding: 28rpx;
-  background: #FF476F;
+  background: #10B981;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -298,7 +254,7 @@ function stopAudio() {
   overflow: hidden;
 }
 
-.page.listen-guess-page::before {
+.page.spell-page::before {
   content: '';
   position: absolute;
   top: 40rpx;
@@ -313,7 +269,7 @@ function stopAudio() {
   box-shadow: 0 12rpx 0 #D97706;
 }
 
-.page.listen-guess-page::after {
+.page.spell-page::after {
   content: '';
   position: absolute;
   bottom: 60rpx;
@@ -431,8 +387,23 @@ function stopAudio() {
 
 .score, .question-num {
   font-size: 28rpx;
-  color: #FF6B3D;
+  color: #10B981;
   font-weight: 700;
+}
+
+.character-display {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 48rpx 0;
+  background: #F3F4F6;
+  border-radius: 24rpx;
+}
+
+.character-text {
+  font-size: 120rpx;
+  font-weight: 700;
+  color: #10B981;
 }
 
 .audio-section {
@@ -446,9 +417,9 @@ function stopAudio() {
   width: 200rpx;
   height: 200rpx;
   border-radius: 32rpx;
-  background: #FF476F;
+  background: #10B981;
   border: 8rpx solid #FFFFFF;
-  box-shadow: 0 12rpx 0 #E53E5F;
+  box-shadow: 0 12rpx 0 #059669;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -459,7 +430,7 @@ function stopAudio() {
 
 .audio-button:active {
   transform: translateY(4rpx);
-  box-shadow: 0 8rpx 0 #E53E5F;
+  box-shadow: 0 8rpx 0 #059669;
 }
 
 .audio-button.playing {
@@ -482,53 +453,73 @@ function stopAudio() {
   font-weight: 600;
 }
 
-.options-grid {
+.input-section {
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24rpx;
-}
-
-.option-card {
-  background: #FBBF24;
-  border: 8rpx solid #FFFFFF;
-  border-radius: 32rpx;
-  box-shadow: 0 12rpx 0 #D97706;
-  padding: 48rpx 24rpx;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
+  flex-direction: column;
+  gap: 16rpx;
 }
 
-.option-card:active {
-  transform: translateY(4rpx);
-  box-shadow: 0 8rpx 0 #D97706;
+.input-row {
+  width: 100%;
+  display: flex;
+  gap: 16rpx;
 }
 
-.option-card.selected {
-  background: #FF476F;
-  border: 8rpx solid #FFFFFF;
-  box-shadow: 0 12rpx 0 #E53E5F;
+.pinyin-input {
+  flex: 1;
+  height: 88rpx;
+  background: #F3F4F6;
+  border: 4rpx solid #E5E7EB;
+  border-radius: 24rpx;
+  padding: 0 24rpx;
+  font-size: 32rpx;
+  color: #2d3436;
+  font-weight: 600;
 }
 
-.option-card.correct {
+.pinyin-input:disabled {
+  background: #E5E7EB;
+  color: #9CA3AF;
+}
+
+.submit-btn {
+  height: 88rpx;
+  padding: 0 32rpx;
   background: #10B981;
+  color: #FFFFFF;
+  border-radius: 24rpx;
+  font-weight: 700;
+  font-size: 28rpx;
   border: 8rpx solid #FFFFFF;
   box-shadow: 0 12rpx 0 #059669;
+  transition: all 0.3s ease;
 }
 
-.option-card.wrong {
-  background: #EF4444;
-  border: 8rpx solid #FFFFFF;
-  box-shadow: 0 12rpx 0 #DC2626;
+.submit-btn:active:not(:disabled) {
+  transform: translateY(4rpx);
+  box-shadow: 0 8rpx 0 #059669;
 }
 
-.option-text {
-  font-size: 48rpx;
+.submit-btn:disabled {
+  background: #9CA3AF;
+  box-shadow: none;
+}
+
+.hint-text {
+  width: 100%;
+  text-align: center;
+  font-size: 28rpx;
+  color: #6B7280;
+  padding: 16rpx;
+  background: #F3F4F6;
+  border-radius: 16rpx;
+}
+
+.correct-answer {
+  color: #10B981;
   font-weight: 700;
-  color: #FFFFFF;
+  font-size: 32rpx;
 }
 
 .feedback-section {
@@ -545,6 +536,14 @@ function stopAudio() {
   font-weight: 700;
   text-align: center;
   color: #2d3436;
+}
+
+.feedback-text.correct {
+  color: #10B981;
+}
+
+.feedback-text.wrong {
+  color: #EF4444;
 }
 
 .next-btn {
@@ -594,7 +593,7 @@ function stopAudio() {
 .result-title {
   font-size: 48rpx;
   font-weight: 700;
-  color: #FF476F;
+  color: #10B981;
 }
 
 .result-score {
@@ -622,13 +621,13 @@ function stopAudio() {
 }
 
 .restart-btn {
-  background: #FF476F;
-  box-shadow: 0 12rpx 0 #E53E5F;
+  background: #10B981;
+  box-shadow: 0 12rpx 0 #059669;
 }
 
 .home-btn {
-  background: #10B981;
-  box-shadow: 0 12rpx 0 #059669;
+  background: #FF476F;
+  box-shadow: 0 12rpx 0 #E53E5F;
 }
 
 .restart-btn:active, .home-btn:active {
@@ -636,10 +635,10 @@ function stopAudio() {
 }
 
 .restart-btn:active {
-  box-shadow: 0 8rpx 0 #E53E5F;
+  box-shadow: 0 8rpx 0 #059669;
 }
 
 .home-btn:active {
-  box-shadow: 0 8rpx 0 #059669;
+  box-shadow: 0 8rpx 0 #E53E5F;
 }
 </style>

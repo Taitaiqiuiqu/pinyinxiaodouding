@@ -1,16 +1,20 @@
 <template>
-  <view class="page listen-guess-page">
+  <view class="page tone-training-page">
     <view class="floating-stars"></view>
     <AudioPlayer ref="audio" />
 
     <view class="center-area card container">
-      <text class="title">听音辨音</text>
-      <text class="subtitle">听一听，选出正确的拼音</text>
+      <text class="title">声调训练</text>
+      <text class="subtitle">听一听，选出正确的声调</text>
 
       <view class="game-area">
         <view class="score-row">
           <text class="score">得分：{{ score }}</text>
           <text class="question-num">第 {{ currentQuestion + 1 }} / {{ totalQuestions }} 题</text>
+        </view>
+
+        <view class="pinyin-display">
+          <text class="pinyin-text">{{ currentPinyin }}</text>
         </view>
 
         <view class="audio-section">
@@ -22,17 +26,18 @@
 
         <view class="options-grid">
           <view
-            v-for="(option, index) in currentOptions"
+            v-for="(option, index) in toneOptions"
             :key="index"
-            class="option-card"
+            class="tone-card"
             :class="{
               correct: showResult && option.isCorrect,
-              wrong: showResult && selectedOption === index && !option.isCorrect,
-              selected: selectedOption === index && !showResult
+              wrong: showResult && selectedTone === option.tone && !option.isCorrect,
+              selected: selectedTone === option.tone && !showResult
             }"
-            @tap="selectOption(index)"
+            @tap="selectTone(option.tone)"
           >
-            <text class="option-text">{{ option.pinyin }}</text>
+            <text class="tone-number">{{ option.tone === 0 ? '轻声' : option.tone + '声' }}</text>
+            <text class="tone-mark">{{ getToneMark(option.tone) }}</text>
           </view>
         </view>
 
@@ -69,8 +74,7 @@ import { playPinyinAudio } from '@/src/services/PinyinAudioPlayer'
 import { getPinyinAllTonesFileIDs } from '@/src/services/pinyinAudio'
 import AudioPlayer from '@/src/components/AudioPlayer/AudioPlayer.vue'
 
-interface PinyinOption {
-  pinyin: string
+interface ToneOption {
   tone: 0 | 1 | 2 | 3 | 4
   isCorrect: boolean
 }
@@ -79,8 +83,10 @@ const audio = ref<any>(null)
 const score = ref(0)
 const currentQuestion = ref(0)
 const totalQuestions = ref(10)
-const currentOptions = ref<PinyinOption[]>([])
-const selectedOption = ref<number | null>(null)
+const currentPinyin = ref('')
+const correctTone = ref<0 | 1 | 2 | 3 | 4>(0)
+const toneOptions = ref<ToneOption[]>([])
+const selectedTone = ref<0 | 1 | 2 | 3 | 4 | null>(null)
 const showResult = ref(false)
 const isCorrect = ref(false)
 const feedbackText = ref('')
@@ -146,9 +152,10 @@ onUnmounted(() => {
 })
 
 function generateQuestion() {
-  const correctPinyin = pinyinList[Math.floor(Math.random() * pinyinList.length)]
+  const randomPinyin = pinyinList[Math.floor(Math.random() * pinyinList.length)]
+  currentPinyin.value = randomPinyin
   
-  const allToneFileIDs = getPinyinAllTonesFileIDs(correctPinyin)
+  const allToneFileIDs = getPinyinAllTonesFileIDs(randomPinyin)
   const availableTones: (0 | 1 | 2 | 3 | 4)[] = []
   
   allToneFileIDs.forEach((fileID, index) => {
@@ -158,48 +165,28 @@ function generateQuestion() {
   })
   
   if (availableTones.length === 0) {
-    console.warn(`拼音 ${correctPinyin} 没有可用的声调音频，跳过`)
+    console.warn(`拼音 ${randomPinyin} 没有可用的声调音频，跳过`)
     generateQuestion()
     return
   }
   
-  const correctTone = availableTones[Math.floor(Math.random() * availableTones.length)] as 0 | 1 | 2 | 3 | 4
+  correctTone.value = availableTones[Math.floor(Math.random() * availableTones.length)] as 0 | 1 | 2 | 3 | 4
 
-  const options: PinyinOption[] = []
+  const options: ToneOption[] = []
   options.push({
-    pinyin: correctPinyin,
-    tone: correctTone,
+    tone: correctTone.value,
     isCorrect: true
   })
 
-  const usedPinyins = new Set([correctPinyin])
-
-  while (options.length < 4) {
-    let randomPinyin
-    do {
-      randomPinyin = pinyinList[Math.floor(Math.random() * pinyinList.length)]
-    } while (usedPinyins.has(randomPinyin))
-
-    const randomToneFileIDs = getPinyinAllTonesFileIDs(randomPinyin)
-    const randomAvailableTones: (0 | 1 | 2 | 3 | 4)[] = []
-    
-    randomToneFileIDs.forEach((fileID, index) => {
-      if (fileID !== null) {
-        randomAvailableTones.push(index as 0 | 1 | 2 | 3 | 4)
-      }
-    })
-    
-    if (randomAvailableTones.length === 0) {
-      continue
+  const allTones: (0 | 1 | 2 | 3 | 4)[] = [0, 1, 2, 3, 4]
+  
+  for (let i = 0; i < allTones.length; i++) {
+    if (allTones[i] !== correctTone.value) {
+      options.push({
+        tone: allTones[i],
+        isCorrect: false
+      })
     }
-    
-    const randomTone = randomAvailableTones[Math.floor(Math.random() * randomAvailableTones.length)] as 0 | 1 | 2 | 3 | 4
-    options.push({
-      pinyin: randomPinyin,
-      tone: randomTone,
-      isCorrect: false
-    })
-    usedPinyins.add(randomPinyin)
   }
 
   for (let i = options.length - 1; i > 0; i--) {
@@ -207,20 +194,28 @@ function generateQuestion() {
     ;[options[i], options[j]] = [options[j], options[i]]
   }
 
-  currentOptions.value = options
-  selectedOption.value = null
+  toneOptions.value = options
+  selectedTone.value = null
   showResult.value = false
 }
 
-async function playAudio() {
-  const correctOption = currentOptions.value.find(opt => opt.isCorrect)
-  if (!correctOption) return
+function getToneMark(tone: 0 | 1 | 2 | 3 | 4): string {
+  const toneMarks: Record<number, string> = {
+    0: '',
+    1: 'ā',
+    2: 'á',
+    3: 'ǎ',
+    4: 'à'
+  }
+  return toneMarks[tone] || ''
+}
 
+async function playAudio() {
   isPlaying.value = true
   try {
     await playPinyinAudio({
-      pinyin: correctOption.pinyin,
-      tone: correctOption.tone
+      pinyin: currentPinyin.value,
+      tone: correctTone.value
     })
   } catch (error) {
     console.error('播放音频失败:', error)
@@ -229,19 +224,18 @@ async function playAudio() {
   }
 }
 
-function selectOption(index: number) {
+function selectTone(tone: 0 | 1 | 2 | 3 | 4) {
   if (showResult.value) return
 
-  selectedOption.value = index
-  const selected = currentOptions.value[index]
-  isCorrect.value = selected.isCorrect
+  selectedTone.value = tone
+  isCorrect.value = tone === correctTone.value
 
   if (isCorrect.value) {
     score.value += 10
     feedbackText.value = '回答正确！'
   } else {
-    const correctOption = currentOptions.value.find(opt => opt.isCorrect)
-    feedbackText.value = `回答错误，正确答案是 ${correctOption?.pinyin}`
+    const toneText = correctTone.value === 0 ? '轻声' : correctTone.value + '声'
+    feedbackText.value = `回答错误，正确答案是 ${toneText}`
   }
 
   showResult.value = true
@@ -258,7 +252,7 @@ function nextQuestion() {
 
 function getResultMessage() {
   const percentage = (score.value / (totalQuestions.value * 10)) * 100
-  if (percentage >= 90) return '太棒了！你是拼音小天才！'
+  if (percentage >= 90) return '太棒了！你是声调小天才！'
   if (percentage >= 70) return '做得很好！继续加油！'
   if (percentage >= 50) return '还不错，多练习会更好！'
   return '再接再厉，你一定可以的！'
@@ -287,9 +281,9 @@ function stopAudio() {
 </script>
 
 <style scoped>
-.page.listen-guess-page {
+.page.tone-training-page {
   padding: 28rpx;
-  background: #FF476F;
+  background: #8B5CF6;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -298,7 +292,7 @@ function stopAudio() {
   overflow: hidden;
 }
 
-.page.listen-guess-page::before {
+.page.tone-training-page::before {
   content: '';
   position: absolute;
   top: 40rpx;
@@ -313,7 +307,7 @@ function stopAudio() {
   box-shadow: 0 12rpx 0 #D97706;
 }
 
-.page.listen-guess-page::after {
+.page.tone-training-page::after {
   content: '';
   position: absolute;
   bottom: 60rpx;
@@ -431,8 +425,23 @@ function stopAudio() {
 
 .score, .question-num {
   font-size: 28rpx;
-  color: #FF6B3D;
+  color: #8B5CF6;
   font-weight: 700;
+}
+
+.pinyin-display {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 24rpx 0;
+  background: #F3F4F6;
+  border-radius: 24rpx;
+}
+
+.pinyin-text {
+  font-size: 72rpx;
+  font-weight: 700;
+  color: #8B5CF6;
 }
 
 .audio-section {
@@ -446,9 +455,9 @@ function stopAudio() {
   width: 200rpx;
   height: 200rpx;
   border-radius: 32rpx;
-  background: #FF476F;
+  background: #8B5CF6;
   border: 8rpx solid #FFFFFF;
-  box-shadow: 0 12rpx 0 #E53E5F;
+  box-shadow: 0 12rpx 0 #7C3AED;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -459,7 +468,7 @@ function stopAudio() {
 
 .audio-button:active {
   transform: translateY(4rpx);
-  box-shadow: 0 8rpx 0 #E53E5F;
+  box-shadow: 0 8rpx 0 #7C3AED;
 }
 
 .audio-button.playing {
@@ -485,47 +494,55 @@ function stopAudio() {
 .options-grid {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24rpx;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16rpx;
 }
 
-.option-card {
+.tone-card {
   background: #FBBF24;
   border: 8rpx solid #FFFFFF;
-  border-radius: 32rpx;
+  border-radius: 24rpx;
   box-shadow: 0 12rpx 0 #D97706;
-  padding: 48rpx 24rpx;
+  padding: 32rpx 12rpx;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 8rpx;
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
-.option-card:active {
+.tone-card:active {
   transform: translateY(4rpx);
   box-shadow: 0 8rpx 0 #D97706;
 }
 
-.option-card.selected {
-  background: #FF476F;
+.tone-card.selected {
+  background: #8B5CF6;
   border: 8rpx solid #FFFFFF;
-  box-shadow: 0 12rpx 0 #E53E5F;
+  box-shadow: 0 12rpx 0 #7C3AED;
 }
 
-.option-card.correct {
+.tone-card.correct {
   background: #10B981;
   border: 8rpx solid #FFFFFF;
   box-shadow: 0 12rpx 0 #059669;
 }
 
-.option-card.wrong {
+.tone-card.wrong {
   background: #EF4444;
   border: 8rpx solid #FFFFFF;
   box-shadow: 0 12rpx 0 #DC2626;
 }
 
-.option-text {
+.tone-number {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.tone-mark {
   font-size: 48rpx;
   font-weight: 700;
   color: #FFFFFF;
@@ -594,7 +611,7 @@ function stopAudio() {
 .result-title {
   font-size: 48rpx;
   font-weight: 700;
-  color: #FF476F;
+  color: #8B5CF6;
 }
 
 .result-score {
@@ -622,8 +639,8 @@ function stopAudio() {
 }
 
 .restart-btn {
-  background: #FF476F;
-  box-shadow: 0 12rpx 0 #E53E5F;
+  background: #8B5CF6;
+  box-shadow: 0 12rpx 0 #7C3AED;
 }
 
 .home-btn {
@@ -636,7 +653,7 @@ function stopAudio() {
 }
 
 .restart-btn:active {
-  box-shadow: 0 8rpx 0 #E53E5F;
+  box-shadow: 0 8rpx 0 #7C3AED;
 }
 
 .home-btn:active {

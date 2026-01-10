@@ -10,7 +10,6 @@ class GlobalAudioManager {
   private audioCache: Map<string, string> = new Map()
   private songPaused: boolean = false
   private currentSongFile: string = ''
-  private currentSongType: string = ''
   private onStateChangeCallback: ((isPlaying: boolean) => void) | null = null
 
   private constructor() {
@@ -165,7 +164,6 @@ class GlobalAudioManager {
   playSong(audioFile: string, audioType: string = 'songs', onComplete?: () => void) {
     console.log('[GlobalAudioManager] playSong called with:', audioFile, audioType)
     this.currentSongFile = audioFile
-    this.currentSongType = audioType
     this.songPaused = false
     this.currentAudioFile = audioFile
     this.audioType = audioType
@@ -199,7 +197,6 @@ class GlobalAudioManager {
       this.ctx.stop()
       this.songPaused = false
       this.currentSongFile = ''
-      this.currentSongType = ''
       this.notifyStateChange(false)
     }
   }

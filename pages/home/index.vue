@@ -493,7 +493,7 @@ const showComingSoon = (moduleName: string) => {
 /* 页面基础样式 */
 .home-page {
   min-height: 100vh;
-  background: #FF476F;
+  background: #FFB84D;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -504,29 +504,31 @@ const showComingSoon = (moduleName: string) => {
 .home-page::before {
   content: '';
   position: absolute;
-  top: 20rpx;
-  right: 20rpx;
-  width: 160rpx;
-  height: 160rpx;
-  background: #FBBF24;
+  top: 40rpx;
+  right: 40rpx;
+  width: 140rpx;
+  height: 140rpx;
+  background: #FF476F;
   border-radius: 24rpx;
   transform: rotate(15deg);
   z-index: 0;
   animation: float-left 8s ease-in-out infinite reverse;
+  box-shadow: 0 12rpx 0 #E53E5F;
 }
 
 .home-page::after {
   content: '';
   position: absolute;
-  bottom: 40rpx;
-  left: 40rpx;
-  width: 120rpx;
-  height: 120rpx;
+  bottom: 60rpx;
+  left: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
   background: #3B82F6;
   border-radius: 24rpx;
   transform: rotate(-10deg);
   z-index: 0;
   animation: float 6s ease-in-out infinite;
+  box-shadow: 0 12rpx 0 #1D4ED8;
 }
 
 /* 浮动动画 */

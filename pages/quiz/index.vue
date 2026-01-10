@@ -262,37 +262,47 @@ const submitAnswer = () => {
   overflow: hidden;
 }
 
-/* Decorative elements - 积木风格 */
-.decoration {
-  position: fixed;
-  background: #FF6B3D;
-  opacity: 0.6;
+/* 积木风格装饰元素 */
+.page.quiz-page::before {
+  content: '';
+  position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  width: 140rpx;
+  height: 140rpx;
+  background: #FF476F;
+  border-radius: 24rpx;
+  transform: rotate(15deg);
   z-index: 0;
-  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.2);
+  animation: float-left 8s ease-in-out infinite reverse;
+  box-shadow: 0 12rpx 0 #E53E5F;
 }
 
-.decoration-1 {
-  width: 300rpx;
-  height: 300rpx;
-  top: -150rpx;
-  right: -150rpx;
-  transform: rotate(20deg);
+.page.quiz-page::after {
+  content: '';
+  position: absolute;
+  bottom: 60rpx;
+  left: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: #3B82F6;
+  border-radius: 24rpx;
+  transform: rotate(-10deg);
+  z-index: 0;
+  animation: float 6s ease-in-out infinite;
+  box-shadow: 0 12rpx 0 #1D4ED8;
 }
 
-.decoration-2 {
-  width: 280rpx;
-  height: 280rpx;
-  bottom: -140rpx;
-  left: -140rpx;
-  transform: rotate(45deg);
+/* 浮动动画 */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-20rpx) rotate(-15deg); }
 }
 
-.decoration-3 {
-  width: 150rpx;
-  height: 150rpx;
-  top: 30%;
-  left: 10%;
-  transform: rotate(10deg);
+/* 左上角装饰元素浮动动画 */
+@keyframes float-left {
+  0%, 100% { transform: translateY(0) rotate(15deg); }
+  50% { transform: translateY(-25rpx) rotate(20deg); }
 }
 
 /* Additional floating decorations */

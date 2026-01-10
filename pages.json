@@ -85,6 +85,24 @@
 		}
 	},
 	{
+		"path": "pages/games/tone-training/index",
+		"style": {
+			"navigationBarTitleText": "声调训练"
+		}
+	},
+	{
+		"path": "pages/games/spell/index",
+		"style": {
+			"navigationBarTitleText": "拼音拼写"
+		}
+	},
+	{
+		"path": "pages/games/match/index",
+		"style": {
+			"navigationBarTitleText": "拼音消消乐"
+		}
+	},
+	{
 		"path": "pages/games/index",
 		"style": {
 			"navigationBarTitleText": "游戏训练"

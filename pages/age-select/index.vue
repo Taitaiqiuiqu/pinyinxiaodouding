@@ -23,11 +23,6 @@
         </view>
       </view>
     </view>
-
-    <!-- 装饰元素 -->
-    <view class="decoration decoration-1"></view>
-    <view class="decoration decoration-2"></view>
-    <view class="decoration decoration-3"></view>
   </view>
 </template>
 
@@ -104,6 +99,49 @@ const selectAge = async (ageLevel: number) => {
   width: 100%;
 }
 
+/* 积木风格装饰元素 */
+.page.age-select-page::before {
+  content: '';
+  position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  width: 140rpx;
+  height: 140rpx;
+  background: #FBBF24;
+  border-radius: 24rpx;
+  transform: rotate(15deg);
+  z-index: 0;
+  animation: float-left 8s ease-in-out infinite reverse;
+  box-shadow: 0 12rpx 0 #D97706;
+}
+
+.page.age-select-page::after {
+  content: '';
+  position: absolute;
+  bottom: 60rpx;
+  left: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: #FF476F;
+  border-radius: 24rpx;
+  transform: rotate(-10deg);
+  z-index: 0;
+  animation: float 6s ease-in-out infinite;
+  box-shadow: 0 12rpx 0 #E53E5F;
+}
+
+/* 浮动动画 */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-20rpx) rotate(-15deg); }
+}
+
+/* 左上角装饰元素浮动动画 */
+@keyframes float-left {
+  0%, 100% { transform: translateY(0) rotate(15deg); }
+  50% { transform: translateY(-25rpx) rotate(20deg); }
+}
+
 /* 页面头部 */
 .header {
   text-align: center;
@@ -142,53 +180,7 @@ const selectAge = async (ageLevel: number) => {
   padding: 0 28rpx;
 }
 
-/* 装饰元素 - 积木风格 */
-.decoration {
-  position: fixed;
-  opacity: 0.6;
-  z-index: 0;
-  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.2);
-}
 
-.decoration-1 {
-  width: 280rpx;
-  height: 280rpx;
-  background: #FBBF24;
-  border-radius: 24rpx;
-  top: -80rpx;
-  left: -80rpx;
-  transform: rotate(15deg);
-  animation: float 6s ease-in-out infinite;
-}
-
-.decoration-2 {
-  width: 240rpx;
-  height: 240rpx;
-  background: #10B981;
-  border-radius: 24rpx;
-  bottom: -120rpx;
-  right: -120rpx;
-  transform: rotate(-10deg);
-  animation: float 8s ease-in-out infinite reverse;
-  animation-delay: 2s;
-}
-
-.decoration-3 {
-  width: 160rpx;
-  height: 160rpx;
-  background: #FF476F;
-  border-radius: 24rpx;
-  top: 20%;
-  right: 10%;
-  transform: rotate(30deg);
-  animation: float 5s ease-in-out infinite;
-  animation-delay: 1s;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20rpx); }
-}
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(40rpx); }

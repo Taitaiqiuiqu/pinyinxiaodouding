@@ -1,13 +1,8 @@
 <template>
   <view class="login-container">
-    <!-- 装饰元素 -->
-    <view class="decoration decoration-1"></view>
-    <view class="decoration decoration-2"></view>
-    <view class="decoration decoration-3"></view>
-    
     <view class="logo-wrapper">
       <view class="logo-icon">🌟</view>
-      <view class="app-title">拼音小豆豆</view>
+      <view class="app-title">拼音小豆丁</view>
       <view class="app-subtitle">快乐学习拼音</view>
     </view>
     
@@ -150,37 +145,47 @@ onShow(() => {
   overflow: hidden;
 }
 
-/* 装饰元素 - 积木风格 */
-.decoration {
-  position: fixed;
-  background: #FF6B3D;
-  opacity: 0.6;
-  z-index: 0;
-  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.2);
-}
-
-.decoration-1 {
-  width: 320rpx;
-  height: 320rpx;
-  top: -160rpx;
-  left: -160rpx;
-  transform: rotate(45deg);
-}
-
-.decoration-2 {
-  width: 240rpx;
-  height: 240rpx;
-  bottom: -120rpx;
-  right: -120rpx;
+/* 积木风格装饰元素 */
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  width: 140rpx;
+  height: 140rpx;
+  background: #FFB84D;
+  border-radius: 24rpx;
   transform: rotate(15deg);
+  z-index: 0;
+  animation: float-left 8s ease-in-out infinite reverse;
+  box-shadow: 0 12rpx 0 #E59E40;
 }
 
-.decoration-3 {
-  width: 160rpx;
-  height: 160rpx;
-  top: 20%;
-  right: 10%;
-  transform: rotate(30deg);
+.login-container::after {
+  content: '';
+  position: absolute;
+  bottom: 60rpx;
+  left: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: #3B82F6;
+  border-radius: 24rpx;
+  transform: rotate(-10deg);
+  z-index: 0;
+  animation: float 6s ease-in-out infinite;
+  box-shadow: 0 12rpx 0 #1D4ED8;
+}
+
+/* 浮动动画 */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-20rpx) rotate(-15deg); }
+}
+
+/* 左上角装饰元素浮动动画 */
+@keyframes float-left {
+  0%, 100% { transform: translateY(0) rotate(15deg); }
+  50% { transform: translateY(-25rpx) rotate(20deg); }
 }
 
 .logo-wrapper {
@@ -195,15 +200,16 @@ onShow(() => {
   font-size: 180rpx;
   margin-bottom: 24rpx;
   animation: sparkle 2s ease-in-out infinite;
-  background: #FFFFFF;
+  background: #3B82F6;
   width: 180rpx;
   height: 180rpx;
   border-radius: 32rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12rpx 24rpx rgba(0, 0, 0, 0.2);
   margin: 0 auto 24rpx;
+  border: 8rpx solid #FFFFFF;
+  box-shadow: 0 12rpx 0 #1D4ED8;
 }
 
 @keyframes sparkle {
@@ -246,42 +252,39 @@ onShow(() => {
 .login-desc {
   text-align: center;
   font-size: 36rpx;
-  color: rgba(255, 255, 255, 0.9);
+  color: #FFFFFF;
   margin-bottom: 80rpx;
   line-height: 1.8;
-  background: #FFFFFF;
-  color: #FF476F;
+  background: #10B981;
   padding: 24rpx;
-  border-radius: 16rpx;
-  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.2);
+  border-radius: 32rpx;
+  border: 8rpx solid #FFFFFF;
+  box-shadow: 0 12rpx 0 #059669;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
 }
 
 .wx-login-btn {
   width: 100%;
   height: 112rpx;
-  background: #FBBF24;
-  color: #2d3436;
+  background: #F59E0B;
+  color: #FFFFFF;
   font-size: 40rpx;
-  border-radius: 16rpx;
+  border-radius: 32rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  box-shadow: 0 12rpx 24rpx rgba(0, 0, 0, 0.2);
+  border: 8rpx solid #FFFFFF;
+  box-shadow: 0 12rpx 0 #D97706;
   transition: transform 200ms ease, box-shadow 200ms ease, opacity 200ms ease;
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
 }
 
 .wx-login-btn:active {
   transform: translateY(4rpx);
-  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
-}
-
-.wx-login-btn:hover {
-  box-shadow: 0 16rpx 32rpx rgba(0, 0, 0, 0.25);
-  transform: translateY(-2rpx);
+  box-shadow: 0 8rpx 0 #D97706;
 }
 
 .btn-icon {

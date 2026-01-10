@@ -7,7 +7,7 @@
       <text class="subtitle">选择一个游戏开始学习吧！</text>
 
       <view class="games-grid">
-        <view class="game-card" @tap="goToGame('listen-guess')">
+        <view class="game-card game-card-1" @tap="goToGame('listen-guess')">
           <view class="game-icon">🎧</view>
           <text class="game-title">听音辨音</text>
           <text class="game-desc">听拼音，选正确的答案</text>
@@ -23,7 +23,7 @@
           </view>
         </view>
 
-        <view class="game-card disabled">
+        <view class="game-card game-card-2" @tap="goToGame('tone-training')">
           <view class="game-icon">🎵</view>
           <text class="game-title">声调训练</text>
           <text class="game-desc">学习拼音的四个声调</text>
@@ -37,12 +37,9 @@
               <text class="star">⭐</text>
             </view>
           </view>
-          <view class="coming-soon">
-            <text>即将推出</text>
-          </view>
         </view>
 
-        <view class="game-card disabled">
+        <view class="game-card game-card-3" @tap="goToGame('spell')">
           <view class="game-icon">✏️</view>
           <text class="game-title">拼音拼写</text>
           <text class="game-desc">听音拼写完整的拼音</text>
@@ -55,12 +52,9 @@
               <text class="star">⭐</text>
             </view>
           </view>
-          <view class="coming-soon">
-            <text>即将推出</text>
-          </view>
         </view>
 
-        <view class="game-card disabled">
+        <view class="game-card game-card-4" @tap="goToGame('match')">
           <view class="game-icon">🎮</view>
           <text class="game-title">拼音消消乐</text>
           <text class="game-desc">快速消除匹配的拼音</text>
@@ -73,9 +67,6 @@
               <text class="star">⭐</text>
               <text class="star">⭐</text>
             </view>
-          </view>
-          <view class="coming-soon">
-            <text>即将推出</text>
           </view>
         </view>
       </view>
@@ -92,6 +83,18 @@ function goToGame(gameType: string) {
   if (gameType === 'listen-guess') {
     uni.navigateTo({
       url: '/pages/games/listen-guess/index'
+    })
+  } else if (gameType === 'tone-training') {
+    uni.navigateTo({
+      url: '/pages/games/tone-training/index'
+    })
+  } else if (gameType === 'spell') {
+    uni.navigateTo({
+      url: '/pages/games/spell/index'
+    })
+  } else if (gameType === 'match') {
+    uni.navigateTo({
+      url: '/pages/games/match/index'
     })
   }
 }
@@ -122,7 +125,6 @@ function goToGame(gameType: string) {
   transform: rotate(15deg);
   z-index: 0;
   animation: float-left 8s ease-in-out infinite reverse;
-  border: 8rpx solid #FFFFFF;
   box-shadow: 0 12rpx 0 #E53E5F;
 }
 
@@ -138,7 +140,6 @@ function goToGame(gameType: string) {
   transform: rotate(-10deg);
   z-index: 0;
   animation: float 6s ease-in-out infinite;
-  border: 8rpx solid #FFFFFF;
   box-shadow: 0 12rpx 0 #1D4ED8;
 }
 
@@ -283,9 +284,45 @@ function goToGame(gameType: string) {
   overflow: hidden;
 }
 
+.game-card-1 {
+  background: #FF476F;
+  box-shadow: 0 12rpx 0 #E53E5F;
+}
+
+.game-card-2 {
+  background: #3B82F6;
+  box-shadow: 0 12rpx 0 #1D4ED8;
+}
+
+.game-card-3 {
+  background: #10B981;
+  box-shadow: 0 12rpx 0 #059669;
+}
+
+.game-card-4 {
+  background: #F59E0B;
+  box-shadow: 0 12rpx 0 #D97706;
+}
+
 .game-card:active {
   transform: translateY(4rpx);
   box-shadow: 0 8rpx 0 #E5E7EB;
+}
+
+.game-card-1:active {
+  box-shadow: 0 8rpx 0 #E53E5F;
+}
+
+.game-card-2:active {
+  box-shadow: 0 8rpx 0 #1D4ED8;
+}
+
+.game-card-3:active {
+  box-shadow: 0 8rpx 0 #059669;
+}
+
+.game-card-4:active {
+  box-shadow: 0 8rpx 0 #D97706;
 }
 
 .game-card.disabled {
@@ -300,20 +337,23 @@ function goToGame(gameType: string) {
 .game-icon {
   font-size: 64rpx;
   margin-bottom: 8rpx;
+  filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.2));
 }
 
 .game-title {
   font-size: 32rpx;
   font-weight: 700;
-  color: #2d3436;
+  color: #FFFFFF;
   text-align: center;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
 }
 
 .game-desc {
   font-size: 24rpx;
-  color: #6B7280;
+  color: #FFFFFF;
   text-align: center;
   line-height: 1.4;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
 }
 
 .game-difficulty {
@@ -325,8 +365,9 @@ function goToGame(gameType: string) {
 
 .difficulty-label {
   font-size: 20rpx;
-  color: #9CA3AF;
+  color: #FFFFFF;
   font-weight: 600;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
 }
 
 .stars {

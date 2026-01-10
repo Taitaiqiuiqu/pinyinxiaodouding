@@ -1,10 +1,5 @@
 <template>
   <view class="study-page" :class="typeClass">
-    <!-- 积木风格装饰元素 -->
-    <view class="decoration-block decoration-1"></view>
-    <view class="decoration-block decoration-2"></view>
-    <view class="decoration-block decoration-3"></view>
-    
     <!-- 页面头部 -->
     <view class="header">
       <view class="back-btn" @click="goBack">
@@ -1122,56 +1117,106 @@ export default {
 }
 
 /* 积木风格装饰元素 */
-.decoration-block {
+.type-shengmu::before {
+  content: '';
   position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  width: 140rpx;
+  height: 140rpx;
+  background: #FBBF24;
   border-radius: 24rpx;
-  z-index: 0;
-}
-
-.decoration-1 {
-  top: 20rpx;
-  right: 20rpx;
-  width: 160rpx;
-  height: 160rpx;
-  background: rgba(255, 255, 255, 0.2);
   transform: rotate(15deg);
+  z-index: 0;
   animation: float-left 8s ease-in-out infinite reverse;
+  box-shadow: 0 12rpx 0 #D97706;
 }
 
-.decoration-2 {
-  top: 200rpx;
-  left: 30rpx;
+.type-shengmu::after {
+  content: '';
+  position: absolute;
+  bottom: 60rpx;
+  left: 60rpx;
   width: 100rpx;
   height: 100rpx;
-  background: rgba(255, 255, 255, 0.2);
-  transform: rotate(-8deg);
+  background: #3B82F6;
+  border-radius: 24rpx;
+  transform: rotate(-10deg);
+  z-index: 0;
   animation: float 6s ease-in-out infinite;
+  box-shadow: 0 12rpx 0 #1D4ED8;
 }
 
-.decoration-3 {
-  bottom: 100rpx;
-  right: 50rpx;
-  width: 80rpx;
-  height: 80rpx;
-  background: rgba(255, 255, 255, 0.2);
-  transform: rotate(12deg);
-  animation: float-right 7s ease-in-out infinite;
+.type-yunmu::before {
+  content: '';
+  position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  width: 140rpx;
+  height: 140rpx;
+  background: #FF476F;
+  border-radius: 24rpx;
+  transform: rotate(15deg);
+  z-index: 0;
+  animation: float-left 8s ease-in-out infinite reverse;
+  box-shadow: 0 12rpx 0 #E53E5F;
+}
+
+.type-yunmu::after {
+  content: '';
+  position: absolute;
+  bottom: 60rpx;
+  left: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: #3B82F6;
+  border-radius: 24rpx;
+  transform: rotate(-10deg);
+  z-index: 0;
+  animation: float 6s ease-in-out infinite;
+  box-shadow: 0 12rpx 0 #1D4ED8;
+}
+
+.type-zhengti::before {
+  content: '';
+  position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  width: 140rpx;
+  height: 140rpx;
+  background: #FBBF24;
+  border-radius: 24rpx;
+  transform: rotate(15deg);
+  z-index: 0;
+  animation: float-left 8s ease-in-out infinite reverse;
+  box-shadow: 0 12rpx 0 #D97706;
+}
+
+.type-zhengti::after {
+  content: '';
+  position: absolute;
+  bottom: 60rpx;
+  left: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: #FF476F;
+  border-radius: 24rpx;
+  transform: rotate(-10deg);
+  z-index: 0;
+  animation: float 6s ease-in-out infinite;
+  box-shadow: 0 12rpx 0 #E53E5F;
 }
 
 /* 浮动动画 */
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(-8deg); }
-  50% { transform: translateY(-20rpx) rotate(-12deg); }
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-20rpx) rotate(-15deg); }
 }
 
+/* 左上角装饰元素浮动动画 */
 @keyframes float-left {
   0%, 100% { transform: translateY(0) rotate(15deg); }
   50% { transform: translateY(-25rpx) rotate(20deg); }
-}
-
-@keyframes float-right {
-  0%, 100% { transform: translateY(0) rotate(12deg); }
-  50% { transform: translateY(-15rpx) rotate(18deg); }
 }
 
 /* 页面头部 */
