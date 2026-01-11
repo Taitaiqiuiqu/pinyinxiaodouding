@@ -1,4 +1,6 @@
 // Cloud abstraction entry — 导出统一接口，按平台条件编译选择实现
+import { useGlobalStore } from '../../store/global'
+
 // 云开发环境初始化状态
 let cloudInitialized = false
 
@@ -49,16 +51,8 @@ export function getDatabase(): any {
 
 export async function updateAge(ageLevel: number): Promise<{ success: boolean; message: string }> {
   try {
-    let openid = ''
-    // 小程序环境中动态导入可能有问题，改为直接导入
-    const { useGlobalStore } = await import('../../store/global')
-    if (useGlobalStore) {
-      const store = useGlobalStore()
-      openid = store.openid || ''
-    }
-    if (!openid) {
-      openid = uni.getStorageSync('openid') || ''
-    }
+    const store = useGlobalStore()
+    const openid = store.openid || ''
 
     if (!openid) {
       return {

@@ -304,6 +304,11 @@ function goToGame(gameType: string) {
   box-shadow: 0 12rpx 0 #D97706;
 }
 
+.game-card-5 {
+  background: #8B5CF6;
+  box-shadow: 0 12rpx 0 #7C3AED;
+}
+
 .game-card:active {
   transform: translateY(4rpx);
   box-shadow: 0 8rpx 0 #E5E7EB;

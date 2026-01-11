@@ -30,25 +30,14 @@ const loading = ref(false)
 const audioManager = GlobalAudioManager.getInstance()
 
 function recoverLoginState() {
-  const isLoggedIn = uni.getStorageSync('isLoggedIn')
-  const savedOpenid = uni.getStorageSync('openid')
-  const savedUserInfo = uni.getStorageSync('userInfo')
-  
-  if (isLoggedIn && savedOpenid) {
-    store.setOpenId(savedOpenid)
-    if (savedUserInfo) {
-      store.setUserInfo(savedUserInfo)
-    }
+  if (store.openid) {
     return true
   }
   return false
 }
 
 function clearLoginState() {
-  uni.removeStorageSync('openid')
-  uni.removeStorageSync('userInfo')
-  uni.removeStorageSync('isLoggedIn')
-  uni.removeStorageSync('ageLevel')
+  store.clearAllData()
 }
 
 // 处理微信授权登录
@@ -77,11 +66,6 @@ const handleLogin = async (e: any) => {
         // 保存用户信息到全局状态
         store.setUserInfo(userInfo)
         store.setOpenId(cloudRes.result.openid)
-        
-        // 持久化保存关键数据
-        uni.setStorageSync('openid', cloudRes.result.openid)
-        uni.setStorageSync('userInfo', userInfo)
-        uni.setStorageSync('isLoggedIn', true)
         
         // 注意：不停止音频循环播放，让音频持续到age-select页面
         
@@ -115,12 +99,9 @@ onUnmounted(() => {
 
 // 检查答题状态
 const checkQuizStatus = () => {
-  const quizCompleted = uni.getStorageSync('quizCompleted')
-  if (quizCompleted) {
-    // 如果答题已完成，停止音频播放
+  if (store.quizCompleted) {
     audioManager.stopLoop()
-    // 清除答题成功标志
-    uni.removeStorageSync('quizCompleted')
+    store.setQuizCompleted(false)
   }
 }
 

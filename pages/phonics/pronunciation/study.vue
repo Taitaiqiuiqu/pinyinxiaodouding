@@ -106,11 +106,13 @@
 <script>
 import { pinyinAudioPlayer } from '@/src/services/PinyinAudioPlayer'
 import { parseWordPinyin, audioFileExists } from '@/src/services/pinyinAudio'
+import { useGlobalStore } from '@/src/store/global'
 
 export default {
   name: 'StudyPage',
   data() {
     return {
+      globalStore: null,
       type: '',
       name: '',
       currentIndex: 0,
@@ -542,6 +544,7 @@ export default {
     }
   },
   onLoad(options) {
+    this.globalStore = useGlobalStore()
     this.type = options.type || '';
     this.name = options.name || '';
     
@@ -862,8 +865,15 @@ export default {
     },
     loadCurrentItemProgress() {
       try {
-        const progressKey = `${this.type}_progress`;
-        const savedProgress = uni.getStorageSync(progressKey);
+        let savedProgress = null
+        
+        if (this.type === 'shengmu') {
+          savedProgress = this.globalStore.shengmuProgress
+        } else if (this.type === 'yunmu') {
+          savedProgress = this.globalStore.yunmuProgress
+        } else if (this.type === 'zhengti') {
+          savedProgress = this.globalStore.zhengtiProgress
+        }
         
         if (savedProgress) {
           let progressArray = [];
@@ -871,7 +881,6 @@ export default {
           if (this.type === 'shengmu' || this.type === 'zhengti') {
             progressArray = savedProgress;
           } else if (this.type === 'yunmu') {
-            // 合并所有韵母类别的进度
             progressArray = [
               ...savedProgress.single,
               ...savedProgress.compound,
@@ -889,11 +898,17 @@ export default {
     },
     saveProgress() {
       try {
-        const progressKey = `${this.type}_progress`;
-        let savedProgress = uni.getStorageSync(progressKey);
+        let savedProgress = null
+        
+        if (this.type === 'shengmu') {
+          savedProgress = this.globalStore.shengmuProgress
+        } else if (this.type === 'yunmu') {
+          savedProgress = this.globalStore.yunmuProgress
+        } else if (this.type === 'zhengti') {
+          savedProgress = this.globalStore.zhengtiProgress
+        }
         
         if (!savedProgress) {
-          // 如果没有保存的进度，初始化
           if (this.type === 'shengmu') {
             savedProgress = this.shengmuData.map(item => ({
               name: item.name,
@@ -922,14 +937,12 @@ export default {
           }
         }
         
-        // 更新当前项的状态
         if (this.type === 'shengmu' || this.type === 'zhengti') {
           const itemIndex = savedProgress.findIndex(item => item.name === this.currentItem.name);
           if (itemIndex !== -1) {
             savedProgress[itemIndex].status = this.assessment;
           }
         } else if (this.type === 'yunmu') {
-          // 确定当前项属于哪个类别
           let category = null;
           if (this.yunmuData.single.some(item => item.name === this.currentItem.name)) {
             category = 'single';
@@ -947,11 +960,15 @@ export default {
           }
         }
         
-        // 解锁下一项
         this.unlockNextItem(savedProgress);
         
-        // 保存进度
-        uni.setStorageSync(progressKey, savedProgress);
+        if (this.type === 'shengmu') {
+          this.globalStore.setShengmuProgress(savedProgress)
+        } else if (this.type === 'yunmu') {
+          this.globalStore.setYunmuProgress(savedProgress)
+        } else if (this.type === 'zhengti') {
+          this.globalStore.setZhengtiProgress(savedProgress)
+        }
       } catch (e) {
         console.error('保存进度失败', e);
       }

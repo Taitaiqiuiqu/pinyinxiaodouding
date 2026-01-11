@@ -1,5 +1,54 @@
 import { defineStore } from 'pinia'
 
+interface LearningRecord {
+  id: string
+  date: string
+  type: 'phonics' | 'games' | 'workbook' | 'songs'
+  content: string
+  duration: number
+  accuracy?: number
+  score?: number
+  timestamp: number
+}
+
+interface LearningStats {
+  totalLearningTime: number
+  totalSessions: number
+  masteredPinyin: number
+  totalPinyin: number
+  averageAccuracy: number
+  lastLearningDate: string
+}
+
+interface LearningReport {
+  id: string
+  date: string
+  weekRange: string
+  totalLearningTime: number
+  totalSessions: number
+  accuracy: number
+  progress: number
+  recommendations: string[]
+}
+
+interface LearningContentSettings {
+  enablePhonics: boolean
+  enableGames: boolean
+  enableWorkbook: boolean
+  enableSongs: boolean
+  difficultyLevel: 'easy' | 'medium' | 'hard' | 'auto'
+}
+
+interface QuizAttempts {
+  attemptsLeft: number
+  lastRefillTime: number
+}
+
+interface ParentQuizAttempts {
+  attemptsLeft: number
+  lastRefillTime: number
+}
+
 const STORAGE_KEYS = {
   ageLevel: 'ageLevel',
   maxUsageTime: 'maxUsageTime',
@@ -10,7 +59,22 @@ const STORAGE_KEYS = {
   openid: 'openid',
   ballPosition: 'ballPosition',
   isDocked: 'isDocked',
-  isHalfVisible: 'isHalfVisible'
+  isHalfVisible: 'isHalfVisible',
+  learningRecords: 'learningRecords',
+  learningStats: 'learningStats',
+  learningReports: 'learningReports',
+  notificationEnabled: 'notificationEnabled',
+  dailyStartTime: 'dailyStartTime',
+  timeLimitEnabled: 'timeLimitEnabled',
+  learningContentSettings: 'learningContentSettings',
+  parentVerified: 'parentVerified',
+  hasCompletedGuide: 'hasCompletedGuide',
+  quizCompleted: 'quizCompleted',
+  quizAttempts: 'quizAttempts',
+  parentQuizAttempts: 'parentQuizAttempts',
+  shengmuProgress: 'shengmu_progress',
+  yunmuProgress: 'yunmu_progress',
+  zhengtiProgress: 'zhengti_progress'
 }
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
@@ -90,7 +154,45 @@ export const useGlobalStore = defineStore('global', {
     showFloatingBall: false as boolean,
     ballPosition: loadFromStorage(STORAGE_KEYS.ballPosition, { x: 0, y: 0 }) as {x: number, y: number},
     isDocked: loadBoolean(STORAGE_KEYS.isDocked, false) as boolean,
-    isHalfVisible: loadBoolean(STORAGE_KEYS.isHalfVisible, false) as boolean
+    isHalfVisible: loadBoolean(STORAGE_KEYS.isHalfVisible, false) as boolean,
+    learningRecords: loadFromStorage(STORAGE_KEYS.learningRecords, []) as LearningRecord[],
+    learningStats: loadFromStorage(STORAGE_KEYS.learningStats, {
+      totalLearningTime: 0,
+      totalSessions: 0,
+      masteredPinyin: 0,
+      totalPinyin: 0,
+      averageAccuracy: 0,
+      lastLearningDate: ''
+    }) as LearningStats,
+    learningReports: loadFromStorage(STORAGE_KEYS.learningReports, []) as LearningReport[],
+    notificationEnabled: loadBoolean(STORAGE_KEYS.notificationEnabled, true) as boolean,
+    dailyStartTime: loadString(STORAGE_KEYS.dailyStartTime, '') as string,
+    timeLimitEnabled: loadBoolean(STORAGE_KEYS.timeLimitEnabled, true) as boolean,
+    learningContentSettings: loadFromStorage(STORAGE_KEYS.learningContentSettings, {
+      enablePhonics: true,
+      enableGames: true,
+      enableWorkbook: true,
+      enableSongs: true,
+      difficultyLevel: 'auto'
+    }) as LearningContentSettings,
+    parentVerified: loadBoolean(STORAGE_KEYS.parentVerified, false) as boolean,
+    hasCompletedGuide: loadBoolean(STORAGE_KEYS.hasCompletedGuide, false) as boolean,
+    quizCompleted: loadBoolean(STORAGE_KEYS.quizCompleted, false) as boolean,
+    quizAttempts: loadFromStorage<QuizAttempts>(STORAGE_KEYS.quizAttempts, {
+      attemptsLeft: 5,
+      lastRefillTime: 0
+    }) as QuizAttempts,
+    parentQuizAttempts: loadFromStorage<ParentQuizAttempts>(STORAGE_KEYS.parentQuizAttempts, {
+      attemptsLeft: 5,
+      lastRefillTime: 0
+    }) as ParentQuizAttempts,
+    shengmuProgress: loadFromStorage(STORAGE_KEYS.shengmuProgress, []) as any[],
+    yunmuProgress: loadFromStorage(STORAGE_KEYS.yunmuProgress, {
+      single: [],
+      compound: [],
+      nasal: []
+    }) as any,
+    zhengtiProgress: loadFromStorage(STORAGE_KEYS.zhengtiProgress, []) as any[]
   }),
   getters: {
     ageGroup: (state) => {
@@ -183,6 +285,126 @@ export const useGlobalStore = defineStore('global', {
     setIsHalfVisible(halfVisible: boolean) {
       this.isHalfVisible = halfVisible
       uni.setStorageSync(STORAGE_KEYS.isHalfVisible, halfVisible)
+    },
+    addLearningRecord(record: LearningRecord) {
+      this.learningRecords.push(record)
+      uni.setStorageSync(STORAGE_KEYS.learningRecords, JSON.stringify(this.learningRecords))
+      this.updateLearningStats()
+    },
+    updateLearningStats() {
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      
+      const todayRecords = this.learningRecords.filter(r => {
+        const recordDate = new Date(r.timestamp)
+        return recordDate >= today
+      })
+      
+      const totalLearningTime = todayRecords.reduce((sum, r) => sum + r.duration, 0)
+      const totalSessions = todayRecords.length
+      const accuracyRecords = todayRecords.filter(r => r.accuracy !== undefined)
+      const averageAccuracy = accuracyRecords.length > 0 
+        ? Math.round(accuracyRecords.reduce((sum, r) => sum + (r.accuracy || 0), 0) / accuracyRecords.length)
+        : 0
+      
+      this.learningStats = {
+        totalLearningTime,
+        totalSessions,
+        masteredPinyin: this.learningStats.masteredPinyin,
+        totalPinyin: this.learningStats.totalPinyin,
+        averageAccuracy,
+        lastLearningDate: todayRecords.length > 0 
+          ? new Date(Math.max(...todayRecords.map(r => r.timestamp))).toISOString().split('T')[0]
+          : this.learningStats.lastLearningDate
+      }
+      
+      uni.setStorageSync(STORAGE_KEYS.learningStats, JSON.stringify(this.learningStats))
+    },
+    addLearningReport(report: LearningReport) {
+      this.learningReports.push(report)
+      uni.setStorageSync(STORAGE_KEYS.learningReports, JSON.stringify(this.learningReports))
+    },
+    setNotificationEnabled(enabled: boolean) {
+      this.notificationEnabled = enabled
+      uni.setStorageSync(STORAGE_KEYS.notificationEnabled, enabled)
+    },
+    setDailyStartTime(time: string) {
+      this.dailyStartTime = time
+      uni.setStorageSync(STORAGE_KEYS.dailyStartTime, time)
+    },
+    setTimeLimitEnabled(enabled: boolean) {
+      this.timeLimitEnabled = enabled
+      uni.setStorageSync(STORAGE_KEYS.timeLimitEnabled, enabled)
+    },
+    setMaxUsageTime(minutes: number) {
+      this.maxUsageTime = minutes
+      uni.setStorageSync(STORAGE_KEYS.maxUsageTime, minutes)
+    },
+    setLearningContentSettings(settings: LearningContentSettings) {
+      this.learningContentSettings = settings
+      uni.setStorageSync(STORAGE_KEYS.learningContentSettings, JSON.stringify(settings))
+    },
+    setParentVerified(verified: boolean) {
+      this.parentVerified = verified
+      uni.setStorageSync(STORAGE_KEYS.parentVerified, verified)
+    },
+    setHasCompletedGuide(completed: boolean) {
+      this.hasCompletedGuide = completed
+      uni.setStorageSync(STORAGE_KEYS.hasCompletedGuide, completed)
+    },
+    setQuizCompleted(completed: boolean) {
+      this.quizCompleted = completed
+      uni.setStorageSync(STORAGE_KEYS.quizCompleted, completed)
+    },
+    setQuizAttempts(attempts: QuizAttempts) {
+      this.quizAttempts = attempts
+      uni.setStorageSync(STORAGE_KEYS.quizAttempts, JSON.stringify(attempts))
+    },
+    clearQuizAttempts() {
+      this.quizAttempts = {
+        attemptsLeft: 5,
+        lastRefillTime: 0
+      }
+      uni.removeStorageSync(STORAGE_KEYS.quizAttempts)
+    },
+    setParentQuizAttempts(attempts: ParentQuizAttempts) {
+      this.parentQuizAttempts = attempts
+      uni.setStorageSync(STORAGE_KEYS.parentQuizAttempts, JSON.stringify(attempts))
+    },
+    clearParentQuizAttempts() {
+      this.parentQuizAttempts = {
+        attemptsLeft: 5,
+        lastRefillTime: 0
+      }
+      uni.removeStorageSync(STORAGE_KEYS.parentQuizAttempts)
+    },
+    setShengmuProgress(progress: any[]) {
+      this.shengmuProgress = progress
+      uni.setStorageSync(STORAGE_KEYS.shengmuProgress, progress)
+    },
+    setYunmuProgress(progress: any) {
+      this.yunmuProgress = progress
+      uni.setStorageSync(STORAGE_KEYS.yunmuProgress, progress)
+    },
+    setZhengtiProgress(progress: any[]) {
+      this.zhengtiProgress = progress
+      uni.setStorageSync(STORAGE_KEYS.zhengtiProgress, progress)
+    },
+    clearLearningData() {
+      this.learningRecords = []
+      this.learningStats = {
+        totalLearningTime: 0,
+        totalSessions: 0,
+        masteredPinyin: 0,
+        totalPinyin: 0,
+        averageAccuracy: 0,
+        lastLearningDate: ''
+      }
+      this.learningReports = []
+      
+      uni.removeStorageSync(STORAGE_KEYS.learningRecords)
+      uni.removeStorageSync(STORAGE_KEYS.learningStats)
+      uni.removeStorageSync(STORAGE_KEYS.learningReports)
     }
   }
 })

@@ -3,6 +3,42 @@
     <!-- 音频播放器组件 -->
     <AudioPlayer ref="audioPlayer" />
     
+    <!-- 验证弹窗 -->
+    <view v-if="showVerificationModal" class="verification-modal">
+      <view class="modal-overlay" @tap="closeVerificationModal"></view>
+      <view class="modal-content">
+        <view class="modal-header">
+          <text class="modal-title">家长验证</text>
+          <view class="modal-close" @tap="closeVerificationModal">
+            <Icon name="close" size="48rpx" color="#999999" />
+          </view>
+        </view>
+        <view class="modal-body">
+          <text class="question-text">AI大模型底层使用哪种编程语言？</text>
+          <input 
+            type="text" 
+            v-model="verificationAnswer" 
+            class="answer-input" 
+            placeholder="请输入答案"
+            @confirm="verifyAnswer"
+          />
+          <text class="hint-text">提示：可以自行去搜索引擎搜索</text>
+          <view v-if="verificationError" class="error-message">
+            <Icon name="warning" size="32rpx" color="#FF476F" />
+            <text class="error-text">答案错误，请重试</text>
+          </view>
+        </view>
+        <view class="modal-footer">
+          <view class="btn btn-cancel" @tap="closeVerificationModal">
+            <text class="btn-text">取消</text>
+          </view>
+          <view class="btn btn-confirm" @tap="verifyAnswer">
+            <text class="btn-text">确认</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
     <!-- 页面顶部 -->
     <view class="header">
       <text class="page-title">家长设置</text>
@@ -48,6 +84,20 @@
           <view class="setting-info">
             <text class="setting-title">学习内容</text>
             <text class="setting-desc">选择适合孩子的学习内容</text>
+          </view>
+          <view class="setting-arrow">
+            <Icon name="arrow-right" size="48rpx" color="#999999" />
+          </view>
+        </view>
+
+        <!-- 学习报告 -->
+        <view class="setting-item" @tap="navigateToLearningReport">
+          <view class="setting-icon">
+            <Icon name="chart" size="64rpx" color="#8B5CF6" />
+          </view>
+          <view class="setting-info">
+            <text class="setting-title">学习报告</text>
+            <text class="setting-desc">查看周报和月报</text>
           </view>
           <view class="setting-arrow">
             <Icon name="arrow-right" size="48rpx" color="#999999" />
@@ -102,9 +152,17 @@ const audioPlayer = ref<InstanceType<typeof AudioPlayer>>();
 // 设置项状态
 const notificationEnabled = ref(true);
 
+// 验证相关状态
+const showVerificationModal = ref(false);
+const verificationAnswer = ref('');
+const verificationError = ref(false);
+const isVerified = ref(false);
+const pendingAction = ref<(() => void) | null>(null);
+
 // 页面加载时检查用户状态
 onLoad(() => {
   checkUserStatus();
+  loadSettings();
 });
 
 // 页面挂载后初始化
@@ -114,56 +172,116 @@ onMounted(() => {
 
 // 检查用户状态
 const checkUserStatus = () => {
-  // 如果没有openid，跳转到登录页
   if (!globalStore.openid) {
-    const openid = uni.getStorageSync('openid');
-    if (openid) {
-      globalStore.setOpenId(openid);
-    } else {
-      uni.reLaunch({
-        url: '/pages/login/index'
-      });
+    uni.reLaunch({
+      url: '/pages/login/index'
+    });
+  }
+};
+
+// 加载设置
+const loadSettings = () => {
+  notificationEnabled.value = globalStore.notificationEnabled;
+  isVerified.value = globalStore.parentVerified;
+};
+
+// 显示验证弹窗
+const showVerification = (action: () => void) => {
+  if (isVerified.value) {
+    action();
+    return;
+  }
+  
+  pendingAction.value = action;
+  showVerificationModal.value = true;
+  verificationAnswer.value = '';
+  verificationError.value = false;
+};
+
+// 关闭验证弹窗
+const closeVerificationModal = () => {
+  showVerificationModal.value = false;
+  verificationAnswer.value = '';
+  verificationError.value = false;
+  pendingAction.value = null;
+};
+
+// 验证答案
+const verifyAnswer = () => {
+  const answer = verificationAnswer.value.trim().toLowerCase();
+  if (answer === 'python') {
+    verificationError.value = false;
+    isVerified.value = true;
+    globalStore.setParentVerified(true);
+    showVerificationModal.value = false;
+    uni.showToast({
+      title: '验证成功',
+      icon: 'success',
+      duration: 1500
+    });
+    
+    // 执行待处理的操作
+    if (pendingAction.value) {
+      pendingAction.value();
+      pendingAction.value = null;
     }
+  } else {
+    verificationError.value = true;
+    uni.showToast({
+      title: '答案错误',
+      icon: 'none',
+      duration: 1500
+    });
   }
 };
 
 // 导航到学习进度页面
 const navigateToLearningProgress = () => {
-  uni.showToast({
-    title: '学习进度功能正在开发中，敬请期待！',
-    icon: 'none',
-    duration: 2000
+  showVerification(() => {
+    uni.navigateTo({
+      url: '/pages/learning-progress/index'
+    });
   });
 };
 
 // 导航到使用时长页面
 const navigateToUsageTime = () => {
-  uni.showToast({
-    title: '使用时长功能正在开发中，敬请期待！',
-    icon: 'none',
-    duration: 2000
+  showVerification(() => {
+    uni.navigateTo({
+      url: '/pages/usage-time/index'
+    });
   });
 };
 
 // 导航到学习内容页面
 const navigateToLearningContent = () => {
-  uni.showToast({
-    title: '学习内容功能正在开发中，敬请期待！',
-    icon: 'none',
-    duration: 2000
+  showVerification(() => {
+    uni.navigateTo({
+      url: '/pages/learning-content/index'
+    });
+  });
+};
+
+// 导航到学习报告页面
+const navigateToLearningReport = () => {
+  showVerification(() => {
+    uni.navigateTo({
+      url: '/pages/learning-report/index'
+    });
   });
 };
 
 // 切换通知设置
 const toggleNotification = () => {
-  notificationEnabled.value = !notificationEnabled.value;
-  // 直接保存设置
-  uni.setStorageSync('notificationEnabled', notificationEnabled.value ? 'true' : 'false');
-  // 显示提示
-  uni.showToast({
-    title: notificationEnabled.value ? '通知已开启' : '通知已关闭',
-    icon: 'success',
-    duration: 1500
+  showVerification(() => {
+    notificationEnabled.value = !notificationEnabled.value;
+    globalStore.setNotificationEnabled(notificationEnabled.value);
+    
+    uni.showToast({
+      title: notificationEnabled.value ? '通知已开启' : '通知已关闭',
+      icon: 'success',
+      duration: 1500
+    });
   });
 };
 
@@ -171,10 +289,8 @@ const toggleNotification = () => {
 const onNotificationChange = (e: any) => {
   const value = e.detail.value;
   notificationEnabled.value = value;
-  // 这里可以添加通知设置的保存逻辑
-  uni.setStorageSync('notificationEnabled', value ? 'true' : 'false');
+  globalStore.setNotificationEnabled(value);
   
-  // 显示提示
   uni.showToast({
     title: value ? '通知已开启' : '通知已关闭',
     icon: 'success',
@@ -421,5 +537,164 @@ const navigateToAbout = () => {
 
 .setting-item:nth-child(5) .setting-icon {
   background: rgba(255, 255, 255, 0.2);
+}
+
+.setting-item:nth-child(6) {
+  background: #8B5CF6;
+  border-color: #FFFFFF;
+  box-shadow: 0 12rpx 0 #7C3AED;
+}
+
+.setting-item:nth-child(6) .setting-title,
+.setting-item:nth-child(6) .setting-desc {
+  color: #FFFFFF;
+}
+
+.setting-item:nth-child(6) .setting-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 验证弹窗样式 */
+.verification-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: relative;
+  width: 640rpx;
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 48rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32rpx;
+}
+
+.modal-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333333;
+}
+
+.modal-close {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #F5F5F5;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  margin-bottom: 32rpx;
+}
+
+.question-text {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333333;
+  line-height: 1.6;
+}
+
+.answer-input {
+  width: 100%;
+  padding: 24rpx;
+  background: #F5F5F5;
+  border: 2rpx solid #E0E0E0;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.answer-input:focus {
+  border-color: #FF476F;
+  outline: none;
+}
+
+.hint-text {
+  font-size: 24rpx;
+  color: #999999;
+  font-style: italic;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  background: #FFF0F0;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #FF476F;
+}
+
+.error-text {
+  font-size: 24rpx;
+  color: #FF476F;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 16rpx;
+}
+
+.btn {
+  flex: 1;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel {
+  background: #F5F5F5;
+  border: 2rpx solid #E0E0E0;
+}
+
+.btn-cancel .btn-text {
+  color: #666666;
+}
+
+.btn-confirm {
+  background: #FF476F;
+  border: 2rpx solid #FF476F;
+}
+
+.btn-confirm .btn-text {
+  color: #FFFFFF;
+}
+
+.btn-text {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 </style>

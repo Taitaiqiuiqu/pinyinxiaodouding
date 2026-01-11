@@ -73,12 +73,14 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { playPinyinAudio } from '@/src/services/PinyinAudioPlayer'
 import { getPinyinAllTonesFileIDs } from '@/src/services/pinyinAudio'
 import AudioPlayer from '@/src/components/AudioPlayer/AudioPlayer.vue'
+import { useGlobalStore } from '@/src/store/global'
 
 interface ToneOption {
   tone: 0 | 1 | 2 | 3 | 4
   isCorrect: boolean
 }
 
+const globalStore = useGlobalStore()
 const audio = ref<any>(null)
 const score = ref(0)
 const currentQuestion = ref(0)
@@ -92,6 +94,8 @@ const isCorrect = ref(false)
 const feedbackText = ref('')
 const isPlaying = ref(false)
 const showResultModal = ref(false)
+const gameStartTime = ref(0)
+const correctAnswers = ref(0)
 
 const pinyinList = [
   'a', 'o', 'e', 'i', 'u', 'ü',
@@ -144,6 +148,7 @@ const pinyinList = [
 const isLastQuestion = computed(() => currentQuestion.value >= totalQuestions.value - 1)
 
 onMounted(() => {
+  gameStartTime.value = Date.now()
   generateQuestion()
 })
 
@@ -232,6 +237,7 @@ function selectTone(tone: 0 | 1 | 2 | 3 | 4) {
 
   if (isCorrect.value) {
     score.value += 10
+    correctAnswers.value++
     feedbackText.value = '回答正确！'
   } else {
     const toneText = correctTone.value === 0 ? '轻声' : correctTone.value + '声'
@@ -243,11 +249,32 @@ function selectTone(tone: 0 | 1 | 2 | 3 | 4) {
 
 function nextQuestion() {
   if (isLastQuestion.value) {
+    saveLearningRecord()
     showResultModal.value = true
   } else {
     currentQuestion.value++
     generateQuestion()
   }
+}
+
+function saveLearningRecord() {
+  const now = Date.now()
+  const duration = Math.floor((now - gameStartTime.value) / 1000)
+  const accuracy = Math.round((correctAnswers.value / totalQuestions.value) * 100)
+
+  const record = {
+    id: `record_${now}`,
+    date: new Date(now).toISOString().split('T')[0],
+    type: 'games' as const,
+    content: '声调训练',
+    duration: duration,
+    accuracy: accuracy,
+    score: score.value,
+    timestamp: now
+  }
+
+  globalStore.addLearningRecord(record)
+  console.log('[声调训练] 学习记录已保存:', record)
 }
 
 function getResultMessage() {

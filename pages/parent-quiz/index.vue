@@ -1,23 +1,22 @@
 <template>
-  <view class="page quiz-page">
+  <view class="page parent-quiz-page">
     <view class="floating-stars"></view>
     <AudioPlayer ref="audio" />
 
     <view class="center-area card container">
-      <text class="title">答题验证</text>
+      <text class="title">家长验证</text>
       <text class="subtitle">请完成以下题目以继续</text>
 
-      <!-- Quiz section -->
       <view class="quiz">
         <view class="attempts-row">
           <text class="attempts">剩余尝试：{{ attemptsLeft }}</text>
           <text class="next-refill" v-if="attemptsLeft < 5 && nextRefillInMs > 0">下次刷新：{{ formatMs(nextRefillInMs) }}</text>
         </view>
-        <text class="q-question">9 × ? = 72</text>
+        <text class="q-question">{{ question }}</text>
         <input 
           class="q-input" 
-          type="number" 
-          v-model.number="answer" 
+          type="text" 
+          v-model="answer" 
           placeholder="请输入答案" 
           :disabled="attemptsLeft<=0"
           @focus="hideHandGuide"
@@ -39,10 +38,10 @@
           :style="{ transform: btnDown ? 'scale(0.98)' : 'scale(1)' }"
         >提交</button>
         <text class="q-hint" v-if="feedback">{{ feedback }}</text>
+        <text class="q-hint-text">提示：可以自行去搜索引擎搜索</text>
       </view>
     </view>
 
-    <!-- 装饰元素 -->
     <view class="decoration decoration-1"></view>
     <view class="decoration decoration-2"></view>
     <view class="decoration decoration-3"></view>
@@ -50,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, nextTick } from 'vue'
 import { onShow, onHide } from '@dcloudio/uni-app'
 import { useGlobalStore } from '../../src/store/global'
 import HandGuide from '../../src/components/HandGuide/HandGuide.vue'
@@ -59,25 +58,46 @@ import AudioPlayer from '../../src/components/AudioPlayer/AudioPlayer.vue'
 const globalStore = useGlobalStore()
 
 const audio = ref<any>(null)
+const question = ref('AI大模型底层使用哪种编程语言？')
+const correctAnswer = ref('python')
 
-const answer = ref<number | ''>('')
+const answer = ref('')
 const feedback = ref('')
 const btnDown = ref(false)
 const attemptsLeft = ref(5)
 const nextRefillInMs = ref(0)
 const _attemptsTimerId = ref<any>(null)
 const showHandGuide = ref(true)
-const showAnimation = ref(false)
 
 onShow(() => {
-  audio.value && audio.value.play({
-    type: 'guide',
-    file: 'age-select/guide_age_survey_3-8_01.MP3',
-    loop: true
-  }).catch(() => {})
   _loadAttemptsFromStorage()
   _startAttemptsTimer()
+  nextTick(() => {
+    playWelcomeAudio()
+  })
 })
+
+const playWelcomeAudio = () => {
+  console.log('[ParentQuiz] 开始播放欢迎音频')
+  console.log('[ParentQuiz] audio ref:', audio.value)
+  
+  audio.value?.play({
+    type: 'guide',
+    file: 'parents_get_in',
+    loop: false,
+    onComplete: () => {
+      console.log('[ParentQuiz] parents_get_in 播放完成，准备播放 parents_ask')
+      setTimeout(() => {
+        console.log('[ParentQuiz] 开始播放 parents_ask')
+        audio.value?.play({
+          type: 'guide',
+          file: 'parents_ask',
+          loop: false
+        })
+      }, 300)
+    }
+  })
+}
 
 onHide(() => {
   _stopAttemptsTimer()
@@ -92,7 +112,7 @@ const formatMs = (ms: number) => {
 
 const _loadAttemptsFromStorage = () => {
   try {
-    const data = globalStore.quizAttempts
+    const data = globalStore.parentQuizAttempts
     if (typeof data.attemptsLeft === 'number') {
       attemptsLeft.value = data.attemptsLeft
     }
@@ -106,9 +126,9 @@ const _loadAttemptsFromStorage = () => {
         attemptsLeft.value = Math.min(5, attemptsLeft.value + adds)
         const newLast = lastRefill + adds * interval
         if (attemptsLeft.value >= 5) {
-          globalStore.clearQuizAttempts()
+          globalStore.clearParentQuizAttempts()
         } else {
-          globalStore.setQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: newLast })
+          globalStore.setParentQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: newLast })
         }
       } else {
         const next = lastRefill + interval - elapsed
@@ -122,13 +142,13 @@ const _loadAttemptsFromStorage = () => {
 const _saveAttemptsToStorage = () => {
   try {
     if (attemptsLeft.value >= 5) {
-      globalStore.clearQuizAttempts()
+      globalStore.clearParentQuizAttempts()
       nextRefillInMs.value = 0
     } else {
       const now = Date.now()
-      const data = globalStore.quizAttempts
+      const data = globalStore.parentQuizAttempts
       let lastRefill = data && data.lastRefillTime ? data.lastRefillTime : now
-      globalStore.setQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: lastRefill })
+      globalStore.setParentQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: lastRefill })
     }
   } catch (e) {}
 }
@@ -150,7 +170,7 @@ const _stopAttemptsTimer = () => {
 
 const _updateNextRefill = () => {
   try {
-    const data = globalStore.quizAttempts
+    const data = globalStore.parentQuizAttempts
     if (!data || data.attemptsLeft >= 5) {
       nextRefillInMs.value = 0
       return
@@ -164,10 +184,10 @@ const _updateNextRefill = () => {
       attemptsLeft.value = Math.min(5, (data.attemptsLeft || 0) + adds)
       const newLast = lastRefill + adds * interval
       if (attemptsLeft.value >= 5) {
-        globalStore.clearQuizAttempts()
+        globalStore.clearParentQuizAttempts()
         nextRefillInMs.value = 0
       } else {
-        globalStore.setQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: newLast })
+        globalStore.setParentQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: newLast })
         nextRefillInMs.value = Math.max(0, newLast + interval - now)
       }
     } else {
@@ -188,29 +208,29 @@ const submitAnswer = () => {
     return
   }
 
-  if (Number(answer.value) === 8) {
-    feedback.value = '回答正确，正在跳转到年龄选择页面...'
-    globalStore.clearQuizAttempts()
-    globalStore.setQuizCompleted(true)
+  if (answer.value.trim().toLowerCase() === correctAnswer.value) {
+    feedback.value = '验证成功，正在跳转...'
+    globalStore.clearParentQuizAttempts()
+    globalStore.setParentVerified(true)
     
     setTimeout(() => {
       uni.navigateTo({
-        url: '/pages/age-select/index'
+        url: '/pages/parent-settings/index'
       })
     }, 1500)
   } else {
     attemptsLeft.value -= 1
     if (attemptsLeft.value <= 0) {
       feedback.value = '已达到最大尝试次数，无法继续'
-      globalStore.setQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: Date.now() })
+      globalStore.setParentQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: Date.now() })
       _updateNextRefill()
     } else {
       try {
-        const data = globalStore.quizAttempts
+        const data = globalStore.parentQuizAttempts
         if (!data || !data.lastRefillTime) {
-          globalStore.setQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: Date.now() })
+          globalStore.setParentQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: Date.now() })
         } else {
-          globalStore.setQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: data.lastRefillTime })
+          globalStore.setParentQuizAttempts({ attemptsLeft: attemptsLeft.value, lastRefillTime: data.lastRefillTime })
         }
       } catch(e){}
       feedback.value = `答案不正确，请再试一次（剩余 ${attemptsLeft.value} 次）`
@@ -221,10 +241,9 @@ const submitAnswer = () => {
 </script>
 
 <style scoped>
-/* 页面基础样式 - 积木风格纯色背景 */
-.page.quiz-page {
+.page.parent-quiz-page {
   padding: 28rpx;
-  background: #FBBF24;
+  background: #8B5CF6;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -233,8 +252,7 @@ const submitAnswer = () => {
   overflow: hidden;
 }
 
-/* 积木风格装饰元素 */
-.page.quiz-page::before {
+.page.parent-quiz-page::before {
   content: '';
   position: absolute;
   top: 40rpx;
@@ -249,34 +267,31 @@ const submitAnswer = () => {
   box-shadow: 0 12rpx 0 #E53E5F;
 }
 
-.page.quiz-page::after {
+.page.parent-quiz-page::after {
   content: '';
   position: absolute;
   bottom: 60rpx;
   left: 60rpx;
   width: 100rpx;
   height: 100rpx;
-  background: #3B82F6;
+  background: #FBBF24;
   border-radius: 24rpx;
   transform: rotate(-10deg);
   z-index: 0;
   animation: float 6s ease-in-out infinite;
-  box-shadow: 0 12rpx 0 #1D4ED8;
+  box-shadow: 0 12rpx 0 #D97706;
 }
 
-/* 浮动动画 */
 @keyframes float {
   0%, 100% { transform: translateY(0) rotate(-10deg); }
   50% { transform: translateY(-20rpx) rotate(-15deg); }
 }
 
-/* 左上角装饰元素浮动动画 */
 @keyframes float-left {
   0%, 100% { transform: translateY(0) rotate(15deg); }
   50% { transform: translateY(-25rpx) rotate(20deg); }
 }
 
-/* Additional floating decorations */
 .floating-stars {
   position: absolute;
   top: 0;
@@ -308,19 +323,9 @@ const submitAnswer = () => {
   animation-delay: 2s;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-20rpx) rotate(2deg); }
-}
-
 @keyframes sparkle {
   0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
   50% { transform: scale(1.1) rotate(90deg); opacity: 0.6; }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12); }
-  50% { box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2); }
 }
 
 @keyframes bounce-in {
@@ -329,7 +334,7 @@ const submitAnswer = () => {
   100% { transform: scale(1); opacity: 1; }
 }
 
-.page.quiz-page > view, .page.quiz-page > input, .page.quiz-page > button, .page.quiz-page > text {
+.page.parent-quiz-page > view, .page.parent-quiz-page > input, .page.parent-quiz-page > button, .page.parent-quiz-page > text {
   position: relative;
   z-index: 1;
 }
@@ -347,12 +352,12 @@ const submitAnswer = () => {
   font-size: 48rpx;
   font-weight: 700;
   margin-bottom: 24rpx;
-  color: #2d3436;
-  text-shadow: 2rpx 2rpx 4rpx rgba(0, 0, 0, 0.1);
+  color: #FFFFFF;
+  text-shadow: 2rpx 2rpx 4rpx rgba(0, 0, 0, 0.2);
 }
 
 .subtitle {
-  color: #2d3436;
+  color: #FFFFFF;
   margin-bottom: 32rpx;
   font-size: 28rpx;
   text-align: center;
@@ -380,7 +385,7 @@ const submitAnswer = () => {
   left: 0;
   right: 0;
   height: 6rpx;
-  background: #FF476F;
+  background: #8B5CF6;
   border-radius: 16rpx 16rpx 0 0;
 }
 
@@ -396,85 +401,10 @@ const submitAnswer = () => {
   gap: 32rpx;
   box-shadow: 0 12rpx 0 #E5E7EB;
   border: 8rpx solid #FFFFFF;
-  animation: pulse-glow 2.5s ease-in-out infinite;
   position: relative;
   z-index: 1;
 }
 
-.q-title {
-  font-size: 20rpx;
-  margin-bottom: 12rpx;
-  color: #FF476F;
-  font-weight: 600;
-}
-
-.q-question {
-  font-size: 48rpx;
-  font-weight: 800;
-  margin-bottom: 24rpx;
-  color: #FF6B3D;
-  line-height: 1.4;
-  text-shadow: 1rpx 1rpx 2rpx rgba(0, 0, 0, 0.1);
-}
-
-.q-input {
-  width: 60%;
-  padding: 32rpx 24rpx;
-  border-radius: 24rpx;
-  border: 4rpx solid #FFE8E1;
-  text-align: center;
-  font-size: 36rpx;
-  background: #FFFFFF;
-  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.1);
-  transition: all 200ms ease;
-}
-
-.q-input:focus {
-  border-color: #FF6B3D;
-  box-shadow: 0 0 0 6rpx rgba(255, 107, 61, 0.15);
-}
-
-.q-btn {
-  background: #FF476F;
-  color: #fff;
-  padding: 32rpx 64rpx;
-  height: 72rpx;
-  border-radius: 24rpx;
-  font-weight: 700;
-  font-size: 32rpx;
-  margin-top: 16rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
-  border: none;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.q-btn:active {
-  transform: translateY(4rpx);
-  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
-}
-
-.q-btn.disabled {
-  opacity: 0.5;
-  background: #9CA3AF;
-  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.1);
-}
-
-.q-hint {
-  margin-top: 16rpx;
-  color: #FF6B3D;
-  font-size: 24rpx;
-  line-height: 1.5;
-  text-align: center;
-  font-weight: 600;
-  width: 100%;
-}
-
-/* Responsive adjustments - 微信小程序使用rpx自动适配，无需媒体查询 */
 .attempts-row {
   width: 100%;
   display: flex;
@@ -486,54 +416,94 @@ const submitAnswer = () => {
 
 .attempts {
   font-size: 24rpx;
-  color: #FF6B3D;
+  color: #6B21A8;
   font-weight: 700;
 }
 
 .next-refill {
   font-size: 20rpx;
-  color: #FF476F;
+  color: #6B21A8;
   font-weight: 600;
 }
 
-/* Animations & interactions */
-.motion-fade-up {
-  transform: translateY(12rpx);
-  opacity: 0;
-  animation: fadeUp 420ms forwards;
+.q-question {
+  font-size: 36rpx;
+  font-weight: 800;
+  margin-bottom: 24rpx;
+  color: #6B21A8;
+  line-height: 1.4;
+  text-align: center;
 }
 
-@keyframes fadeUp {
-  to { transform: translateY(0); opacity: 1; }
+.q-input {
+  width: 80%;
+  padding: 32rpx 24rpx;
+  border-radius: 24rpx;
+  border: 4rpx solid #E9D5FF;
+  text-align: center;
+  font-size: 28rpx;
+  background: #FFFFFF;
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.1);
+  transition: all 200ms ease;
+  color: #6B21A8;
+  font-weight: 600;
 }
 
-/* Button press feedback */
-.btn-primary {
-  transition: transform 120ms ease, box-shadow 120ms ease;
-  will-change: transform;
-}
-
-.btn-primary:active {
-  transform: scale(0.98);
-  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.2);
-}
-
-/* Hover effects for interactive elements */
 .q-input:focus {
-  border-color: #FF6B3D;
-  box-shadow: 0 0 0 6rpx rgba(255, 107, 61, 0.15);
+  border-color: #6B21A8;
+  box-shadow: 0 0 0 6rpx rgba(107, 33, 168, 0.15);
 }
 
-/* Additional spacing for better visual hierarchy */
-.quiz > view:not(:last-child) {
-  margin-bottom: 8rpx;
+.q-btn {
+  background: #6B21A8;
+  color: #fff;
+  padding: 32rpx 64rpx;
+  height: 72rpx;
+  border-radius: 24rpx;
+  font-weight: 700;
+  font-size: 32rpx;
+  margin-top: 16rpx;
+  box-shadow: 0 8rpx 24rpx rgba(107, 33, 168, 0.3);
+  border: none;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.quiz > view:nth-child(odd) {
-  margin-bottom: 16rpx;
+.q-btn:active {
+  transform: translateY(4rpx);
+  box-shadow: 0 4rpx 8rpx rgba(107, 33, 168, 0.2);
 }
 
-/* Hand Guide Animation */
+.q-btn.disabled {
+  opacity: 0.5;
+  background: #9CA3AF;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.1);
+}
+
+.q-hint {
+  margin-top: 16rpx;
+  color: #6B21A8;
+  font-size: 24rpx;
+  line-height: 1.5;
+  text-align: center;
+  font-weight: 600;
+  width: 100%;
+}
+
+.q-hint-text {
+  margin-top: 8rpx;
+  color: #6B21A8;
+  font-size: 20rpx;
+  line-height: 1.5;
+  text-align: center;
+  font-style: italic;
+  opacity: 0.7;
+}
+
 .hand-guide-animated {
   animation: hand-bounce 2s ease-in-out infinite;
 }
@@ -545,85 +515,33 @@ const submitAnswer = () => {
   75% { transform: translateY(-8rpx) scale(1.05) translate(-50%, -50%); }
 }
 
-/* Enhanced Button Interactions */
-.q-btn {
-  position: relative;
-  overflow: hidden;
+.decoration {
+  position: absolute;
+  border-radius: 50%;
+  z-index: 0;
 }
 
-/* Input Field Enhancements */
-.q-input {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+.decoration-1 {
+  width: 200rpx;
+  height: 200rpx;
+  background: rgba(255, 255, 255, 0.1);
+  top: 10%;
+  left: 5%;
 }
 
-/* Quiz Container Breathing Effect */
-.quiz {
-  animation: quiz-breathing 4s ease-in-out infinite;
+.decoration-2 {
+  width: 150rpx;
+  height: 150rpx;
+  background: rgba(255, 255, 255, 0.1);
+  bottom: 20%;
+  right: 10%;
 }
 
-@keyframes quiz-breathing {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-}
-
-/* Attempts Counter Animation */
-.attempts {
-  animation: counter-pulse 2s ease-in-out infinite;
-}
-
-@keyframes counter-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
-
-/* Feedback Message Animation */
-.q-hint {
-  animation: feedback-slide 0.5s ease-out;
-}
-
-@keyframes feedback-slide {
-  from { 
-    transform: translateY(20rpx); 
-    opacity: 0; 
-  }
-  to { 
-    transform: translateY(0); 
-    opacity: 1; 
-  }
-}
-
-/* Title Enhancement */
-.title {
-  animation: title-glow 3s ease-in-out infinite;
-}
-
-@keyframes title-glow {
-  0%, 100% { 
-    text-shadow: 2rpx 2rpx 4rpx rgba(0, 0, 0, 0.2); 
-  }
-  50% { 
-    text-shadow: 2rpx 2rpx 8rpx rgba(0, 0, 0, 0.3); 
-  }
-}
-
-/* Question Animation */
-.q-question {
-  animation: question-entrance 0.8s ease-out;
-}
-
-@keyframes question-entrance {
-  0% { 
-    transform: scale(0.8) rotate(-5deg); 
-    opacity: 0; 
-  }
-  50% { 
-    transform: scale(1.05) rotate(2deg); 
-    opacity: 0.8; 
-  }
-  100% { 
-    transform: scale(1) rotate(0deg); 
-    opacity: 1; 
-  }
+.decoration-3 {
+  width: 100rpx;
+  height: 100rpx;
+  background: rgba(255, 255, 255, 0.1);
+  top: 50%;
+  right: 20%;
 }
 </style>

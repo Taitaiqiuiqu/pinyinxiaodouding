@@ -56,6 +56,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { playPinyinAudio } from '@/src/services/PinyinAudioPlayer'
 import { getPinyinAllTonesFileIDs } from '@/src/services/pinyinAudio'
 import AudioPlayer from '@/src/components/AudioPlayer/AudioPlayer.vue'
+import { useGlobalStore } from '@/src/store/global'
 
 interface Card {
   pinyin: string
@@ -64,6 +65,7 @@ interface Card {
   matched: boolean
 }
 
+const globalStore = useGlobalStore()
 const audio = ref<any>(null)
 const score = ref(0)
 const timeLeft = ref(60)
@@ -73,6 +75,8 @@ const gameOver = ref(false)
 const allMatched = ref(false)
 const timer = ref<number | null>(null)
 const isProcessing = ref(false)
+const gameStartTime = ref(0)
+const correctMatches = ref(0)
 
 const pinyinList = [
   'a', 'o', 'e', 'i', 'u', 'ü',
@@ -98,6 +102,8 @@ function initGame() {
   allMatched.value = false
   selectedCards.value = []
   isProcessing.value = false
+  gameStartTime.value = Date.now()
+  correctMatches.value = 0
 
   const pairCount = 8
   
@@ -133,6 +139,13 @@ function initGame() {
   })
 
   cards.value = shuffleArray(cardPairs)
+  
+  audio.value?.play({
+    type: 'guide',
+    file: 'global_let_click',
+    loop: false
+  })
+  
   startTimer()
 }
 
@@ -176,6 +189,7 @@ function checkMatch() {
 
   if (firstCard.pinyin === secondCard.pinyin) {
     score.value += 10
+    correctMatches.value++
     
     setTimeout(() => {
       firstCard.matched = true
@@ -197,6 +211,27 @@ function checkMatch() {
   }
 }
 
+function saveLearningRecord() {
+  const now = Date.now()
+  const duration = Math.floor((now - gameStartTime.value) / 1000)
+  const totalPairs = cards.value.length / 2
+  const accuracy = Math.round((correctMatches.value / totalPairs) * 100)
+
+  const record = {
+    id: `record_${now}`,
+    date: new Date(now).toISOString().split('T')[0],
+    type: 'games' as const,
+    content: '拼音消消乐',
+    duration: duration,
+    accuracy: accuracy,
+    score: score.value,
+    timestamp: now
+  }
+
+  globalStore.addLearningRecord(record)
+  console.log('[拼音消消乐] 学习记录已保存:', record)
+}
+
 function endGame(matched: boolean) {
   gameOver.value = true
   allMatched.value = matched
@@ -205,6 +240,8 @@ function endGame(matched: boolean) {
     clearInterval(timer.value)
     timer.value = null
   }
+  
+  saveLearningRecord()
 }
 
 function restartGame() {

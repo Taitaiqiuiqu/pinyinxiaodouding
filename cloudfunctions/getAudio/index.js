@@ -60,9 +60,50 @@ exports.main = async (event, context) => {
         fileName: 'guide_home_game.wav',
         audioType: 'guide'
       },
-      'guide_home_write': {
-        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/home/guide_home_write.wav',
-        fileName: 'guide_home_write.wav',
+      'guide_home_workbook': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/home/guide_home_workbook.wav',
+        fileName: 'guide_home_workbook.wav',
+        audioType: 'guide'
+      },
+      // 全局引导音频
+      'global_good': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/guides/global_good!.MP3',
+        fileName: 'global_good!.MP3',
+        audioType: 'guide'
+      },
+      'global_help': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/guides/global_help.MP3',
+        fileName: 'global_help.MP3',
+        audioType: 'guide'
+      },
+      'global_let_click': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/guides/global_let_click.MP3',
+        fileName: 'global_let_click.MP3',
+        audioType: 'guide'
+      },
+      'parents_get_in': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/guides/parents_get_in.MP3',
+        fileName: 'parents_get_in.MP3',
+        audioType: 'guide'
+      },
+      'parents_ask': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/guides/parents_ask.MP3',
+        fileName: 'parents_ask.MP3',
+        audioType: 'guide'
+      },
+      'course_get_in': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/guides/course_get_in.MP3',
+        fileName: 'course_get_in.MP3',
+        audioType: 'guide'
+      },
+      'game_get_in': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/guides/game_get_in.MP3',
+        fileName: 'game_get_in.MP3',
+        audioType: 'guide'
+      },
+      'workbook_get_in': {
+        fileID: 'cloud://cloud1-0g2q55rz3fb8f3b8.636c-cloud1-0g2q55rz3fb8f3b8-1392219107/audio/guides/workbook_get_in.wav',
+        fileName: 'workbook_get_in.wav',
         audioType: 'guide'
       },
       // 儿歌音频

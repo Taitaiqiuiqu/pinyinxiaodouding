@@ -9,9 +9,11 @@ import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 import { initCloud } from './src/services/cloud'
 import { useGlobalStore } from './src/store/global'
 import GlobalAudioManager from './src/services/GlobalAudioManager'
+import TimeTracker from './src/services/TimeTracker'
 
 const globalStore = useGlobalStore()
 const audioManager = GlobalAudioManager.getInstance()
+const timeTracker = TimeTracker.getInstance()
 
 onLaunch(() => {
   console.log('App Launch')
@@ -28,10 +30,12 @@ onLaunch(() => {
 
 onShow(() => {
   console.log('App Show')
+  timeTracker.start()
 })
 
 onHide(() => {
   console.log('App Hide')
+  timeTracker.stop()
 })
 </script>
 

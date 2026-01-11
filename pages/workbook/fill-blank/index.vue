@@ -1,11 +1,10 @@
 <template>
-  <view class="page listen-guess-page">
+  <view class="fill-blank-page">
     <view class="floating-stars"></view>
-    <AudioPlayer ref="audio" />
 
     <view class="center-area card container">
-      <text class="title">听音辨音</text>
-      <text class="subtitle">听一听，选出正确的拼音</text>
+      <text class="title">拼音填空</text>
+      <text class="subtitle">补充完整的拼音</text>
 
       <view class="game-area">
         <view class="score-row">
@@ -13,16 +12,16 @@
           <text class="question-num">第 {{ currentQuestion + 1 }} / {{ totalQuestions }} 题</text>
         </view>
 
-        <view class="audio-section">
+        <view class="question-display">
+          <text class="question-text">{{ currentQuestionData.question }}</text>
           <view class="audio-button" @tap="playAudio" :class="{ playing: isPlaying }">
             <text class="audio-icon">{{ isPlaying ? '🔊' : '🔇' }}</text>
-            <text class="audio-text">点击播放</text>
           </view>
         </view>
 
         <view class="options-grid">
           <view
-            v-for="(option, index) in currentOptions"
+            v-for="(option, index) in currentQuestionData.options"
             :key="index"
             class="option-card"
             :class="{
@@ -32,7 +31,7 @@
             }"
             @tap="selectOption(index)"
           >
-            <text class="option-text">{{ option.pinyin }}</text>
+            <text class="option-text">{{ option.text }}</text>
           </view>
         </view>
 
@@ -53,179 +52,94 @@
 
     <view class="result-modal" v-if="showResultModal" @tap="closeResultModal">
       <view class="result-content" @tap.stop>
-        <text class="result-title">游戏结束！</text>
+        <text class="result-title">练习完成！</text>
         <text class="result-score">得分：{{ score }} / {{ totalQuestions * 10 }}</text>
         <text class="result-message">{{ getResultMessage() }}</text>
-        <button class="restart-btn" @tap="restartGame">再玩一次</button>
-        <button class="home-btn" @tap="goHome">返回主页</button>
+        <button class="restart-btn" @tap="restartPractice">再练一次</button>
+        <button class="home-btn" @tap="goHome">返回</button>
       </view>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { playPinyinAudio } from '@/src/services/PinyinAudioPlayer'
-import { getPinyinAllTonesFileIDs } from '@/src/services/pinyinAudio'
-import AudioPlayer from '@/src/components/AudioPlayer/AudioPlayer.vue'
-import { useGlobalStore } from '@/src/store/global'
+import { getPinyinAudioFileID } from '@/src/services/pinyinAudio'
 
-interface PinyinOption {
-  pinyin: string
-  tone: 0 | 1 | 2 | 3 | 4
+interface Option {
+  text: string
   isCorrect: boolean
 }
 
-const globalStore = useGlobalStore()
-const audio = ref<any>(null)
+interface Question {
+  question: string
+  options: Option[]
+  pinyin: string
+  tone: 0 | 1 | 2 | 3 | 4
+}
+
 const score = ref(0)
 const currentQuestion = ref(0)
 const totalQuestions = ref(10)
-const currentOptions = ref<PinyinOption[]>([])
+const currentQuestionData = ref<Question>({ question: '', options: [], pinyin: '', tone: 0 })
 const selectedOption = ref<number | null>(null)
 const showResult = ref(false)
 const isCorrect = ref(false)
 const feedbackText = ref('')
-const isPlaying = ref(false)
 const showResultModal = ref(false)
-const gameStartTime = ref(0)
-const correctAnswers = ref(0)
+const isPlaying = ref(false)
 
-const pinyinList = [
-  'a', 'o', 'e', 'i', 'u', 'ü',
-  'b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h',
-  'j', 'q', 'x', 'zh', 'ch', 'sh', 'r', 'z', 'c', 's', 'y', 'w',
-  'ai', 'ei', 'ui', 'ao', 'ou', 'iu', 'ie', 'üe', 'er',
-  'an', 'en', 'in', 'un', 'ün',
-  'ang', 'eng', 'ing', 'ong',
-  'ba', 'pa', 'ma', 'fa', 'da', 'ta', 'na', 'la',
-  'ga', 'ka', 'ha', 'ja', 'qa', 'xa',
-  'zha', 'cha', 'sha', 'ra', 'za', 'ca', 'sa',
-  'bai', 'pai', 'mai', 'dai', 'tai', 'nai', 'lai',
-  'gai', 'kai', 'hai', 'zhai', 'chai', 'shai', 'zai', 'cai', 'sai',
-  'ban', 'pan', 'man', 'fan', 'dan', 'tan', 'nan', 'lan',
-  'gan', 'kan', 'han', 'zhan', 'chan', 'shan', 'ran', 'zan', 'can', 'san',
-  'bang', 'pang', 'mang', 'fang', 'dang', 'tang', 'nang', 'lang',
-  'gang', 'kang', 'hang', 'zhang', 'chang', 'shang', 'rang', 'zang', 'cang', 'sang',
-  'bei', 'pei', 'mei', 'fei',
-  'gei', 'kei', 'hei', 'zhei', 'chei', 'shei', 'zei',
-  'ben', 'pen', 'men', 'fen',
-  'gen', 'ken', 'hen', 'zhen', 'chen', 'shen', 'ren', 'zen', 'cen', 'sen',
-  'beng', 'peng', 'meng', 'feng',
-  'geng', 'keng', 'heng', 'zheng', 'cheng', 'sheng', 'reng', 'zeng', 'ceng', 'seng',
-  'bi', 'pi', 'mi', 'di', 'ti', 'ni', 'li',
-  'ji', 'qi', 'xi', 'zhi', 'chi', 'shi', 'ri', 'zi', 'ci', 'si',
-  'jia', 'qia', 'xia',
-  'bian', 'pian', 'mian', 'dian', 'tian', 'nian', 'lian',
-  'jian', 'qian', 'xian',
-  'biao', 'piao', 'miao', 'diao', 'tiao', 'niao', 'liao',
-  'jiao', 'qiao', 'xiao',
-  'bie', 'pie', 'mie', 'die', 'tie', 'nie', 'lie',
-  'jie', 'qie', 'xie',
-  'bin', 'pin', 'min',
-  'jin', 'qin', 'xin',
-  'bing', 'ping', 'ming', 'ding', 'ting', 'ning', 'ling',
-  'jing', 'qing', 'xing',
-  'bo', 'po', 'mo', 'fo',
-  'bu', 'pu', 'mu', 'fu', 'du', 'tu', 'nu', 'lu',
-  'gu', 'ku', 'hu', 'zhu', 'chu', 'shu', 'ru', 'zu', 'cu', 'su',
-  'duo', 'tuo', 'nuo', 'luo',
-  'guo', 'kuo', 'huo', 'zhuo', 'chuo', 'shuo', 'ruo', 'zuo', 'cuo', 'suo',
-  'dui', 'tui',
-  'gui', 'kui', 'hui', 'zhui', 'chui', 'shui', 'rui', 'zui', 'cui', 'sui',
-  'dun', 'tun',
-  'gun', 'kun', 'hun', 'zhun', 'chun', 'shun', 'run', 'zun', 'cun', 'sun',
-  'dong', 'tong', 'nong', 'long',
-  'gong', 'kong', 'hong', 'zhong', 'chong', 'rong', 'zong', 'cong', 'song'
+const questions: Question[] = [
+  { question: 'b__', options: [{ text: 'a', isCorrect: true }, { text: 'o', isCorrect: false }, { text: 'e', isCorrect: false }, { text: 'i', isCorrect: false }], pinyin: 'ba', tone: 0 },
+  { question: '__o', options: [{ text: 'b', isCorrect: true }, { text: 'p', isCorrect: false }, { text: 'm', isCorrect: false }, { text: 'f', isCorrect: false }], pinyin: 'bo', tone: 0 },
+  { question: 'm__', options: [{ text: 'a', isCorrect: true }, { text: 'e', isCorrect: false }, { text: 'i', isCorrect: false }, { text: 'u', isCorrect: false }], pinyin: 'ma', tone: 0 },
+  { question: '__a', options: [{ text: 'd', isCorrect: true }, { text: 't', isCorrect: false }, { text: 'n', isCorrect: false }, { text: 'l', isCorrect: false }], pinyin: 'da', tone: 0 },
+  { question: 'g__', options: [{ text: 'e', isCorrect: true }, { text: 'a', isCorrect: false }, { text: 'i', isCorrect: false }, { text: 'u', isCorrect: false }], pinyin: 'ge', tone: 0 },
+  { question: '__i', options: [{ text: 'j', isCorrect: true }, { text: 'q', isCorrect: false }, { text: 'x', isCorrect: false }, { text: 'y', isCorrect: false }], pinyin: 'ji', tone: 0 },
+  { question: 'h__', options: [{ text: 'a', isCorrect: true }, { text: 'e', isCorrect: false }, { text: 'i', isCorrect: false }, { text: 'u', isCorrect: false }], pinyin: 'ha', tone: 0 },
+  { question: '__u', options: [{ text: 'k', isCorrect: true }, { text: 'g', isCorrect: false }, { text: 'h', isCorrect: false }, { text: 'l', isCorrect: false }], pinyin: 'ku', tone: 0 },
+  { question: 'z__', options: [{ text: 'h', isCorrect: true }, { text: 'a', isCorrect: false }, { text: 'e', isCorrect: false }, { text: 'i', isCorrect: false }], pinyin: 'zhi', tone: 0 },
+  { question: '__h', options: [{ text: 'c', isCorrect: true }, { text: 'z', isCorrect: false }, { text: 's', isCorrect: false }, { text: 'r', isCorrect: false }], pinyin: 'ch', tone: 0 },
+  { question: 'sh__', options: [{ text: 'i', isCorrect: true }, { text: 'a', isCorrect: false }, { text: 'e', isCorrect: false }, { text: 'u', isCorrect: false }], pinyin: 'shi', tone: 0 },
+  { question: '__i', options: [{ text: 'ch', isCorrect: true }, { text: 'zh', isCorrect: false }, { text: 'sh', isCorrect: false }, { text: 'r', isCorrect: false }], pinyin: 'chi', tone: 0 },
+  { question: 'r__', options: [{ text: 'i', isCorrect: true }, { text: 'a', isCorrect: false }, { text: 'e', isCorrect: false }, { text: 'u', isCorrect: false }], pinyin: 'ri', tone: 0 },
+  { question: '__i', options: [{ text: 'zh', isCorrect: true }, { text: 'ch', isCorrect: false }, { text: 'sh', isCorrect: false }, { text: 'r', isCorrect: false }], pinyin: 'zhi', tone: 0 },
+  { question: '__ai', options: [{ text: 'b', isCorrect: true }, { text: 'p', isCorrect: false }, { text: 'm', isCorrect: false }, { text: 'f', isCorrect: false }], pinyin: 'bai', tone: 0 },
+  { question: 'b__', options: [{ text: 'ai', isCorrect: true }, { text: 'ei', isCorrect: false }, { text: 'ao', isCorrect: false }, { text: 'ou', isCorrect: false }], pinyin: 'bai', tone: 0 },
+  { question: '__ei', options: [{ text: 'm', isCorrect: true }, { text: 'b', isCorrect: false }, { text: 'p', isCorrect: false }, { text: 'f', isCorrect: false }], pinyin: 'mei', tone: 0 },
+  { question: 'm__', options: [{ text: 'ei', isCorrect: true }, { text: 'ai', isCorrect: false }, { text: 'ao', isCorrect: false }, { text: 'ou', isCorrect: false }], pinyin: 'mei', tone: 0 },
+  { question: '__ao', options: [{ text: 'd', isCorrect: true }, { text: 't', isCorrect: false }, { text: 'n', isCorrect: false }, { text: 'l', isCorrect: false }], pinyin: 'dao', tone: 0 },
+  { question: 'd__', options: [{ text: 'ao', isCorrect: true }, { text: 'ai', isCorrect: false }, { text: 'ei', isCorrect: false }, { text: 'ou', isCorrect: false }], pinyin: 'dao', tone: 0 }
 ]
 
 const isLastQuestion = computed(() => currentQuestion.value >= totalQuestions.value - 1)
 
 onMounted(() => {
-  gameStartTime.value = Date.now()
   generateQuestion()
 })
 
-onUnmounted(() => {
-  stopAudio()
-})
-
 function generateQuestion() {
-  const correctPinyin = pinyinList[Math.floor(Math.random() * pinyinList.length)]
-  
-  const allToneFileIDs = getPinyinAllTonesFileIDs(correctPinyin)
-  const availableTones: (0 | 1 | 2 | 3 | 4)[] = []
-  
-  allToneFileIDs.forEach((fileID, index) => {
-    if (fileID !== null) {
-      availableTones.push(index as 0 | 1 | 2 | 3 | 4)
-    }
-  })
-  
-  if (availableTones.length === 0) {
-    console.warn(`拼音 ${correctPinyin} 没有可用的声调音频，跳过`)
-    generateQuestion()
-    return
-  }
-  
-  const correctTone = availableTones[Math.floor(Math.random() * availableTones.length)] as 0 | 1 | 2 | 3 | 4
-
-  const options: PinyinOption[] = []
-  options.push({
-    pinyin: correctPinyin,
-    tone: correctTone,
-    isCorrect: true
-  })
-
-  const usedPinyins = new Set([correctPinyin])
-
-  while (options.length < 4) {
-    let randomPinyin
-    do {
-      randomPinyin = pinyinList[Math.floor(Math.random() * pinyinList.length)]
-    } while (usedPinyins.has(randomPinyin))
-
-    const randomToneFileIDs = getPinyinAllTonesFileIDs(randomPinyin)
-    const randomAvailableTones: (0 | 1 | 2 | 3 | 4)[] = []
-    
-    randomToneFileIDs.forEach((fileID, index) => {
-      if (fileID !== null) {
-        randomAvailableTones.push(index as 0 | 1 | 2 | 3 | 4)
-      }
-    })
-    
-    if (randomAvailableTones.length === 0) {
-      continue
-    }
-    
-    const randomTone = randomAvailableTones[Math.floor(Math.random() * randomAvailableTones.length)] as 0 | 1 | 2 | 3 | 4
-    options.push({
-      pinyin: randomPinyin,
-      tone: randomTone,
-      isCorrect: false
-    })
-    usedPinyins.add(randomPinyin)
-  }
-
-  for (let i = options.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[options[i], options[j]] = [options[j], options[i]]
-  }
-
-  currentOptions.value = options
+  const randomIndex = Math.floor(Math.random() * questions.length)
+  currentQuestionData.value = questions[randomIndex]
   selectedOption.value = null
   showResult.value = false
 }
 
 async function playAudio() {
-  const correctOption = currentOptions.value.find(opt => opt.isCorrect)
-  if (!correctOption) return
+  if (isPlaying.value) return
+
+  const fileID = getPinyinAudioFileID({ pinyin: currentQuestionData.value.pinyin, tone: currentQuestionData.value.tone })
+  if (!fileID) {
+    console.warn(`音频文件不存在: ${currentQuestionData.value.pinyin}${currentQuestionData.value.tone === 0 ? '' : currentQuestionData.value.tone}.mp3`)
+    return
+  }
 
   isPlaying.value = true
   try {
     await playPinyinAudio({
-      pinyin: correctOption.pinyin,
-      tone: correctOption.tone
+      pinyin: currentQuestionData.value.pinyin,
+      tone: currentQuestionData.value.tone
     })
   } catch (error) {
     console.error('播放音频失败:', error)
@@ -238,16 +152,15 @@ function selectOption(index: number) {
   if (showResult.value) return
 
   selectedOption.value = index
-  const selected = currentOptions.value[index]
-  isCorrect.value = selected.isCorrect
+  const option = currentQuestionData.value.options[index]
+  isCorrect.value = option.isCorrect
 
   if (isCorrect.value) {
     score.value += 10
-    correctAnswers.value++
     feedbackText.value = '回答正确！'
   } else {
-    const correctOption = currentOptions.value.find(opt => opt.isCorrect)
-    feedbackText.value = `回答错误，正确答案是 ${correctOption?.pinyin}`
+    const correctOption = currentQuestionData.value.options.find(o => o.isCorrect)
+    feedbackText.value = `回答错误，正确答案是 ${correctOption?.text}`
   }
 
   showResult.value = true
@@ -255,32 +168,11 @@ function selectOption(index: number) {
 
 function nextQuestion() {
   if (isLastQuestion.value) {
-    saveLearningRecord()
     showResultModal.value = true
   } else {
     currentQuestion.value++
     generateQuestion()
   }
-}
-
-function saveLearningRecord() {
-  const now = Date.now()
-  const duration = Math.floor((now - gameStartTime.value) / 1000)
-  const accuracy = Math.round((correctAnswers.value / totalQuestions.value) * 100)
-
-  const record = {
-    id: `record_${now}`,
-    date: new Date(now).toISOString().split('T')[0],
-    type: 'games' as const,
-    content: '听音辨音',
-    duration: duration,
-    accuracy: accuracy,
-    score: score.value,
-    timestamp: now
-  }
-
-  globalStore.addLearningRecord(record)
-  console.log('[听音辨音] 学习记录已保存:', record)
 }
 
 function getResultMessage() {
@@ -291,7 +183,7 @@ function getResultMessage() {
   return '再接再厉，你一定可以的！'
 }
 
-function restartGame() {
+function restartPractice() {
   score.value = 0
   currentQuestion.value = 0
   showResultModal.value = false
@@ -305,16 +197,10 @@ function goHome() {
 function closeResultModal() {
   showResultModal.value = false
 }
-
-function stopAudio() {
-  if (audio.value) {
-    audio.value.stop()
-  }
-}
 </script>
 
 <style scoped>
-.page.listen-guess-page {
+.fill-blank-page {
   padding: 28rpx;
   background: #FF476F;
   min-height: 100vh;
@@ -325,7 +211,7 @@ function stopAudio() {
   overflow: hidden;
 }
 
-.page.listen-guess-page::before {
+.fill-blank-page::before {
   content: '';
   position: absolute;
   top: 40rpx;
@@ -340,7 +226,7 @@ function stopAudio() {
   box-shadow: 0 12rpx 0 #D97706;
 }
 
-.page.listen-guess-page::after {
+.fill-blank-page::after {
   content: '';
   position: absolute;
   bottom: 60rpx;
@@ -458,35 +344,43 @@ function stopAudio() {
 
 .score, .question-num {
   font-size: 28rpx;
-  color: #FF6B3D;
+  color: #FF476F;
   font-weight: 700;
 }
 
-.audio-section {
+.question-display {
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 32rpx 0;
+  align-items: center;
+  padding: 48rpx 0;
+  background: #F3F4F6;
+  border-radius: 24rpx;
+  gap: 24rpx;
+}
+
+.question-text {
+  font-size: 72rpx;
+  font-weight: 700;
+  color: #FF476F;
 }
 
 .audio-button {
-  width: 200rpx;
-  height: 200rpx;
-  border-radius: 32rpx;
-  background: #FF476F;
-  border: 8rpx solid #FFFFFF;
-  box-shadow: 0 12rpx 0 #E53E5F;
+  width: 80rpx;
+  height: 80rpx;
+  background: #FFB84D;
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 8rpx 0 #F59E0B;
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .audio-button:active {
   transform: translateY(4rpx);
-  box-shadow: 0 8rpx 0 #E53E5F;
+  box-shadow: 0 4rpx 0 #F59E0B;
 }
 
 .audio-button.playing {
@@ -495,66 +389,65 @@ function stopAudio() {
 
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.1); }
 }
 
 .audio-icon {
-  font-size: 64rpx;
-  margin-bottom: 8rpx;
-}
-
-.audio-text {
-  font-size: 24rpx;
-  color: #FFFFFF;
-  font-weight: 600;
+  font-size: 40rpx;
 }
 
 .options-grid {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24rpx;
+  gap: 20rpx;
 }
 
 .option-card {
-  background: #FBBF24;
-  border: 8rpx solid #FFFFFF;
-  border-radius: 32rpx;
-  box-shadow: 0 12rpx 0 #D97706;
-  padding: 48rpx 24rpx;
+  background: #F3F4F6;
+  border: 6rpx solid #E5E7EB;
+  border-radius: 24rpx;
+  padding: 32rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 8rpx 0 #E5E7EB;
 }
 
 .option-card:active {
   transform: translateY(4rpx);
-  box-shadow: 0 8rpx 0 #D97706;
+  box-shadow: 0 4rpx 0 #E5E7EB;
 }
 
 .option-card.selected {
-  background: #FF476F;
-  border: 8rpx solid #FFFFFF;
-  box-shadow: 0 12rpx 0 #E53E5F;
+  background: #FFB84D;
+  border-color: #FFB84D;
+  box-shadow: 0 8rpx 0 #F59E0B;
 }
 
 .option-card.correct {
   background: #10B981;
-  border: 8rpx solid #FFFFFF;
-  box-shadow: 0 12rpx 0 #059669;
+  border-color: #10B981;
+  box-shadow: 0 8rpx 0 #059669;
 }
 
 .option-card.wrong {
   background: #EF4444;
-  border: 8rpx solid #FFFFFF;
-  box-shadow: 0 12rpx 0 #DC2626;
+  border-color: #EF4444;
+  box-shadow: 0 8rpx 0 #DC2626;
 }
 
 .option-text {
-  font-size: 48rpx;
+  font-size: 40rpx;
   font-weight: 700;
+  color: #2d3436;
+}
+
+.option-card.selected .option-text,
+.option-card.correct .option-text,
+.option-card.wrong .option-text {
   color: #FFFFFF;
 }
 
@@ -572,6 +465,14 @@ function stopAudio() {
   font-weight: 700;
   text-align: center;
   color: #2d3436;
+}
+
+.feedback-text.correct {
+  color: #10B981;
+}
+
+.feedback-text.wrong {
+  color: #EF4444;
 }
 
 .next-btn {
@@ -654,8 +555,8 @@ function stopAudio() {
 }
 
 .home-btn {
-  background: #10B981;
-  box-shadow: 0 12rpx 0 #059669;
+  background: #3B82F6;
+  box-shadow: 0 12rpx 0 #1D4ED8;
 }
 
 .restart-btn:active, .home-btn:active {
@@ -667,6 +568,38 @@ function stopAudio() {
 }
 
 .home-btn:active {
-  box-shadow: 0 8rpx 0 #059669;
+  box-shadow: 0 8rpx 0 #1D4ED8;
+}
+
+.decoration {
+  position: fixed;
+  background: #FF6B3D;
+  opacity: 0.6;
+  z-index: 0;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.2);
+}
+
+.decoration-1 {
+  width: 300rpx;
+  height: 300rpx;
+  top: -150rpx;
+  right: -150rpx;
+  transform: rotate(20deg);
+}
+
+.decoration-2 {
+  width: 280rpx;
+  height: 280rpx;
+  bottom: -140rpx;
+  left: -140rpx;
+  transform: rotate(45deg);
+}
+
+.decoration-3 {
+  width: 150rpx;
+  height: 150rpx;
+  top: 30%;
+  left: 10%;
+  transform: rotate(10deg);
 }
 </style>

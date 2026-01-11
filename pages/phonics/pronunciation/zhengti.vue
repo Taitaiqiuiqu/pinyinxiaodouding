@@ -50,10 +50,13 @@
 </template>
 
 <script>
+import { useGlobalStore } from '@/src/store/global'
+
 export default {
   name: 'ZhengtiPage',
   data() {
     return {
+      globalStore: null,
       zhengtiList: [
         { name: 'zhi', pinyin: 'zhī', status: 'locked' },
         { name: 'chi', pinyin: 'chī', status: 'locked' },
@@ -82,6 +85,7 @@ export default {
     }
   },
   onLoad() {
+    this.globalStore = useGlobalStore()
     this.loadProgress();
   },
   onShow() {
@@ -112,11 +116,10 @@ export default {
     },
     loadProgress() {
       try {
-        const savedProgress = uni.getStorageSync('zhengti_progress');
-        if (savedProgress) {
+        const savedProgress = this.globalStore.zhengtiProgress;
+        if (savedProgress && savedProgress.length > 0) {
           this.zhengtiList = savedProgress;
         } else {
-          // 初始化第一个整体认读音节为学习中状态
           this.zhengtiList[0].status = 'learning';
           this.saveProgress();
         }
@@ -126,7 +129,7 @@ export default {
     },
     saveProgress() {
       try {
-        uni.setStorageSync('zhengti_progress', this.zhengtiList);
+        this.globalStore.setZhengtiProgress(this.zhengtiList);
       } catch (e) {
         console.error('保存进度失败', e);
       }

@@ -75,6 +75,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { playPinyinAudio } from '@/src/services/PinyinAudioPlayer'
 import { getPinyinAllTonesFileIDs } from '@/src/services/pinyinAudio'
 import AudioPlayer from '@/src/components/AudioPlayer/AudioPlayer.vue'
+import { useGlobalStore } from '@/src/store/global'
+import TimeTracker from '@/src/services/TimeTracker'
 
 interface WordData {
   character: string
@@ -82,6 +84,8 @@ interface WordData {
   tone: 0 | 1 | 2 | 3 | 4
 }
 
+const globalStore = useGlobalStore()
+const timeTracker = TimeTracker.getInstance()
 const audio = ref<any>(null)
 const score = ref(0)
 const currentQuestion = ref(0)
@@ -95,6 +99,8 @@ const isCorrect = ref(false)
 const feedbackText = ref('')
 const isPlaying = ref(false)
 const showResultModal = ref(false)
+const gameStartTime = ref(0)
+const correctAnswers = ref(0)
 
 const wordList: WordData[] = [
   { character: '爸', pinyin: 'ba', tone: 4 },
@@ -148,6 +154,7 @@ const wordList: WordData[] = [
 const isLastQuestion = computed(() => currentQuestion.value >= totalQuestions.value - 1)
 
 onMounted(() => {
+  gameStartTime.value = Date.now()
   generateQuestion()
 })
 
@@ -195,6 +202,7 @@ function submitAnswer() {
 
   if (isCorrect.value) {
     score.value += 10
+    correctAnswers.value++
     feedbackText.value = '回答正确！'
   } else {
     feedbackText.value = '回答错误，请查看正确答案'
@@ -206,6 +214,7 @@ function submitAnswer() {
 function nextQuestion() {
   if (isLastQuestion.value) {
     showResultModal.value = true
+    saveLearningRecord()
   } else {
     currentQuestion.value++
     generateQuestion()
@@ -220,9 +229,31 @@ function getResultMessage() {
   return '再接再厉，你一定可以的！'
 }
 
+function saveLearningRecord() {
+  const now = Date.now()
+  const duration = Math.floor((now - gameStartTime.value) / 1000)
+  const accuracy = Math.round((correctAnswers.value / totalQuestions.value) * 100)
+
+  const record = {
+    id: `record_${now}`,
+    date: new Date(now).toISOString().split('T')[0],
+    type: 'games' as const,
+    content: '拼音拼写游戏',
+    duration: duration,
+    accuracy: accuracy,
+    score: score.value,
+    timestamp: now
+  }
+
+  globalStore.addLearningRecord(record)
+  console.log('[拼音拼写] 学习记录已保存:', record)
+}
+
 function restartGame() {
   score.value = 0
   currentQuestion.value = 0
+  correctAnswers.value = 0
+  gameStartTime.value = Date.now()
   showResultModal.value = false
   generateQuestion()
 }

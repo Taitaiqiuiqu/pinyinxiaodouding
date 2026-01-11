@@ -31,17 +31,17 @@
           </view>
         </view>
 
-        <!-- 手写练习卡片 -->
-        <view id="card3" class="module-card card-tertiary" @tap="showComingSoon('手写练习')" ref="card3">
+        <!-- 拼音练习册卡片 -->
+        <view id="card3" class="module-card card-tertiary" @tap="navigateTo('/pages/workbook/index')" ref="card3">
           <view class="card-content">
-            <Icon name="write" size="100rpx" color="#FFFFFF" />
-            <text class="card-title">手写练习</text>
-            <text class="card-desc">拼音书写、笔顺练习</text>
+            <Icon name="course" size="100rpx" color="#FFFFFF" />
+            <text class="card-title">拼音练习册</text>
+            <text class="card-desc">填空、连线、排序</text>
           </view>
         </view>
 
         <!-- 家长设置卡片 -->
-        <view id="card4" class="module-card card-quaternary" @tap="navigateTo('/pages/parent-settings/index')" ref="card4">
+        <view id="card4" class="module-card card-quaternary" @tap="navigateToParentSettings" ref="card4">
           <view class="card-content">
             <Icon name="parent" size="100rpx" color="#FFFFFF" />
             <text class="card-title">家长设置</text>
@@ -132,7 +132,7 @@ const guideSteps = [
   },
   {
     title: '开始体验',
-    content: '好的，让我们一起开始拼音启蒙之旅吧！',
+    content: '先让豆丁姐姐给你介绍一下，如何进行学习吧',
     target: 'none',
     type: 'fullscreen',
     rolePosition: { top: '30%', size: '240rpx' },
@@ -141,7 +141,7 @@ const guideSteps = [
   },
   {
     title: '课程学习',
-    content: '小朋友，看向豆丁姐姐的手，这里是课程学习，里面有温柔的老师和好听的儿歌哦！',
+    content: '小朋友，看向豆丁姐姐的手，这里是拼音启蒙，里面既可以学习拼音还有好听的儿歌哦！',
     target: 'card1',
     type: 'highlight',
     rolePosition: { top: 'auto', bottom: '5%', size: '120rpx' },
@@ -158,13 +158,13 @@ const guideSteps = [
     audio: 'guide_home_game'
   },
   {
-    title: '手写练习',
-    content: '最后这里是手写练习，快来尝试一下手写拼音吧！',
+    title: '拼音练习册',
+    content: '这里是拼音练习册，可以做填空、连线、排序等练习，巩固学到的拼音知识！',
     target: 'card3',
     type: 'highlight',
     rolePosition: { top: 'auto', bottom: '5%', size: '120rpx' },
-    position: { top: '70%', left: '20%' },
-    audio: 'guide_home_write'
+    position: { top: '55%', left: '20%' },
+    audio: 'guide_home_workbook'
   }
 ];
 
@@ -380,30 +380,19 @@ onMounted(() => {
 
 // 检查用户状态
 const checkUserStatus = () => {
-  // 如果没有openid，跳转到登录页
   if (!globalStore.openid) {
-    const openid = uni.getStorageSync('openid');
-    if (openid) {
-      globalStore.setOpenId(openid);
-    } else {
-      uni.reLaunch({
-        url: '/pages/login/index'
-      });
-    }
+    uni.reLaunch({
+      url: '/pages/login/index'
+    });
   }
 };
 
 // 检查是否为新用户，决定是否显示新手引导
 const checkNewUser = () => {
-  // 检查本地存储中是否有引导完成标记
-  const hasCompletedGuide = uni.getStorageSync('hasCompletedGuide');
-  if (!hasCompletedGuide) {
-    // 延迟显示引导，让页面完全渲染
+  if (!globalStore.hasCompletedGuide) {
     setTimeout(() => {
       showGuide.value = true;
-      // 更新高亮位置
       updateHighlightRect();
-      // 播放第一个引导音频
       setTimeout(() => {
         playGuideAudio(currentStep.value);
       }, 500);
@@ -436,35 +425,25 @@ const skipGuide = () => {
 
 // 结束引导
 const endGuide = () => {
-  // 停止音频播放
   stopGuideAudio();
-  // 隐藏引导界面
   showGuide.value = false;
-  // 标记引导完成，下次不再显示
-  uni.setStorageSync('hasCompletedGuide', 'true');
+  globalStore.setHasCompletedGuide(true);
 };
 
 // 重置引导流程（开发测试用）
 const resetGuide = () => {
-  // 停止当前音频
   stopGuideAudio();
-  // 清除本地存储的引导完成标记
-  uni.removeStorageSync('hasCompletedGuide');
-  // 重置引导状态
+  globalStore.setHasCompletedGuide(false);
   currentStep.value = 0;
   showSkip.value = true;
-  // 立即显示引导
   showGuide.value = true;
   
-  // 更新高亮位置
   updateHighlightRect();
   
-  // 播放第一个引导音频
   setTimeout(() => {
     playGuideAudio(currentStep.value);
   }, 500);
   
-  // 提示重置成功
   uni.showToast({
     title: '引导流程已重置',
     icon: 'success',
@@ -474,8 +453,35 @@ const resetGuide = () => {
 
 // 页面跳转
 const navigateTo = (url: string) => {
+  let audioFile = '';
+  
+  if (url === '/pages/phonics/index') {
+    audioFile = 'course_get_in';
+  } else if (url === '/pages/games/index') {
+    audioFile = 'game_get_in';
+  } else if (url === '/pages/workbook/index') {
+    audioFile = 'workbook_get_in';
+  } else if (url === '/pages/parent-settings/index') {
+    audioFile = 'parents_get_in';
+  }
+  
+  if (audioFile) {
+    audioPlayer.value?.play({
+      type: 'guide',
+      file: audioFile,
+      loop: false
+    });
+  }
+  
   uni.navigateTo({
     url
+  });
+};
+
+// 跳转到家长设置（先进入答题页面）
+const navigateToParentSettings = () => {
+  uni.navigateTo({
+    url: '/pages/parent-quiz/index'
   });
 };
 

@@ -49,10 +49,13 @@
 </template>
 
 <script>
+import { useGlobalStore } from '@/src/store/global'
+
 export default {
   name: 'ShengmuPage',
   data() {
     return {
+      globalStore: null,
       shengmuList: [
         { name: 'b', status: 'locked' },
         { name: 'p', status: 'locked' },
@@ -88,6 +91,7 @@ export default {
     }
   },
   onLoad() {
+    this.globalStore = useGlobalStore()
     this.loadProgress();
   },
   onShow() {
@@ -118,11 +122,10 @@ export default {
     },
     loadProgress() {
       try {
-        const savedProgress = uni.getStorageSync('shengmu_progress');
-        if (savedProgress) {
+        const savedProgress = this.globalStore.shengmuProgress;
+        if (savedProgress && savedProgress.length > 0) {
           this.shengmuList = savedProgress;
         } else {
-          // 初始化第一个声母为学习中状态
           this.shengmuList[0].status = 'learning';
           this.saveProgress();
         }
@@ -132,7 +135,7 @@ export default {
     },
     saveProgress() {
       try {
-        uni.setStorageSync('shengmu_progress', this.shengmuList);
+        this.globalStore.setShengmuProgress(this.shengmuList);
       } catch (e) {
         console.error('保存进度失败', e);
       }

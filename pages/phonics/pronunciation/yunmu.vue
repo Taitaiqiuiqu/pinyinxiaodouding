@@ -62,10 +62,13 @@
 </template>
 
 <script>
+import { useGlobalStore } from '@/src/store/global'
+
 export default {
   name: 'YunmuPage',
   data() {
     return {
+      globalStore: null,
       currentCategory: 'single',
       categories: [
         { name: '单韵母', type: 'single' },
@@ -122,6 +125,7 @@ export default {
     }
   },
   onLoad() {
+    this.globalStore = useGlobalStore()
     this.loadProgress();
   },
   onShow() {
@@ -155,11 +159,10 @@ export default {
     },
     loadProgress() {
       try {
-        const savedProgress = uni.getStorageSync('yunmu_progress');
-        if (savedProgress) {
+        const savedProgress = this.globalStore.yunmuProgress;
+        if (savedProgress && savedProgress.single && savedProgress.single.length > 0) {
           this.yunmuData = savedProgress;
         } else {
-          // 初始化第一个韵母为学习中状态
           this.yunmuData.single[0].status = 'learning';
           this.saveProgress();
         }
@@ -169,7 +172,7 @@ export default {
     },
     saveProgress() {
       try {
-        uni.setStorageSync('yunmu_progress', this.yunmuData);
+        this.globalStore.setYunmuProgress(this.yunmuData);
       } catch (e) {
         console.error('保存进度失败', e);
       }

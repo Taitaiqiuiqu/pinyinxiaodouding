@@ -60,7 +60,6 @@ const selectAge = async (ageLevel: number) => {
   audioManager.stopLoop()
   const store = useGlobalStore()
   store.setAgeLevel(ageLevel)
-  uni.setStorageSync('ageLevel', ageLevel)
   
   uni.showLoading({ title: '保存中...' })
   

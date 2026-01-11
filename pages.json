@@ -31,6 +31,36 @@
 			}
 		},
 		{
+			"path": "pages/parent-quiz/index",
+			"style": {
+				"navigationBarTitleText": "家长验证"
+			}
+		},
+		{
+			"path": "pages/learning-progress/index",
+			"style": {
+				"navigationBarTitleText": "学习进度"
+			}
+		},
+		{
+			"path": "pages/usage-time/index",
+			"style": {
+				"navigationBarTitleText": "使用时长"
+			}
+		},
+		{
+			"path": "pages/learning-content/index",
+			"style": {
+				"navigationBarTitleText": "学习内容"
+			}
+		},
+		{
+			"path": "pages/learning-report/index",
+			"style": {
+				"navigationBarTitleText": "学习报告"
+			}
+		},
+		{
 			"path": "pages/phonics/index",
 			"style": {
 				"navigationBarTitleText": "拼音启蒙"
@@ -106,6 +136,36 @@
 		"path": "pages/games/index",
 		"style": {
 			"navigationBarTitleText": "游戏训练"
+		}
+	},
+	{
+		"path": "pages/workbook/index",
+		"style": {
+			"navigationBarTitleText": "拼音练习册"
+		}
+	},
+	{
+		"path": "pages/workbook/fill-blank/index",
+		"style": {
+			"navigationBarTitleText": "拼音填空"
+		}
+	},
+	{
+		"path": "pages/workbook/match/index",
+		"style": {
+			"navigationBarTitleText": "拼音连线"
+		}
+	},
+	{
+		"path": "pages/workbook/sort/index",
+		"style": {
+			"navigationBarTitleText": "拼音排序"
+		}
+	},
+	{
+		"path": "pages/workbook/classify/index",
+		"style": {
+			"navigationBarTitleText": "拼音分类"
 		}
 	}
 	],
